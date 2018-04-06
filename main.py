@@ -3,7 +3,7 @@
 # __Email__ : a122691411@gmail.com
 
 import sys
-from UI import UI
+from ui import UI
 from PyQt5.QtWidgets import QApplication
 
 if __name__ == '__main__':
