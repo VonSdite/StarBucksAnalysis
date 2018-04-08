@@ -25,7 +25,7 @@ class UI(QMainWindow):
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
                 "image/StarBucks.png")
 
-        self.resize(300, 300)  # 设置窗口初始大小
+        self.resize(380, 350)  # 设置窗口初始大小
         self.center()           # 将窗口居中
         self.setWindowTitle('星巴克数据分析')
         self.setWindowIcon(QIcon('image/StarBucks.png'))
@@ -136,7 +136,7 @@ class UI(QMainWindow):
             csv_file = pd.read_csv(file)
             self.csv_file = csv_file.fillna('Not set')  # 空值设置为Not set
             with open(savePickle, 'wb') as f:
-                pickle.dump(csv_file, f)
+                pickle.dump(self.csv_file, f)
 
         self.drawMapButton.setEnabled(True)
         self.drawColorMapButton.setEnabled(True)
