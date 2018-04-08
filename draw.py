@@ -109,7 +109,7 @@ def drawMap(csv_file, fileName="html/map.html", title=''):
             lat=group["Latitude"],
             lon=group["Longitude"],
             mode='markers',
-            marker=Marker(size=9, color=timeZoneColorMap[timeZone]),
+            marker=Marker(size=6, color=timeZoneColorMap[timeZone]),
             text=group["info"],
             textposition="top left",
             name=timeZone,
