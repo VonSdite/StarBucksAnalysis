@@ -71,7 +71,6 @@ def drawColorMaps(countryData, fileName="html/colorMap.html", title=''):
                                 bearing=0,
                                 pitch=0,
                                 zoom=1))
-
     fig = dict(data=data, layout=layout)
     py.plot(fig, validate=False, filename=fileName)
 
@@ -85,21 +84,21 @@ def drawMap(csv_file, fileName="html/map.html", title=''):
 
     # 根据不同时区设置颜色点
     timeZoneSet = set(csv_file["Timezone"])
-    if not os.path.isfile('config/colorMap.pickle'):
-        timeZoneColorMap = dict()
-        colorVis = []
-        for timeZone in timeZoneSet:
-            color = 'rgb(%d, %d, %d)' \
-                    % (randint(0, 255), randint(0, 255), randint(0, 255))
-            if color not in colorVis:
-                timeZoneColorMap[timeZone] = color
-                colorVis.append(color)
-        with open('config/colorMap.pickle', 'wb') as f:
-            pickle.dump(timeZoneColorMap, f)
-        del colorVis
-    else:
-        with open('config/colorMap.pickle', 'rb') as f:
-            timeZoneColorMap = pickle.load(f)
+    # if not os.path.isfile('config/colorMap.pickle'):
+    timeZoneColorMap = dict()
+    colorVis = []
+    for timeZone in timeZoneSet:
+        color = 'rgb(%d, %d, %d)' \
+                % (randint(0, 255), randint(0, 255), randint(0, 255))
+        if color not in colorVis:
+            timeZoneColorMap[timeZone] = color
+            colorVis.append(color)
+        # with open('config/colorMap.pickle', 'wb') as f:
+            # pickle.dump(timeZoneColorMap, f)
+    del colorVis
+    # else:
+        # with open('config/colorMap.pickle', 'rb') as f:
+            # timeZoneColorMap = pickle.load(f)
 
     data = []
     dataGroups = csv_file.groupby("Timezone")

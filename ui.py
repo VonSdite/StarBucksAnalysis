@@ -2,7 +2,7 @@
 # __Author__: Sdite
 # __Email__ : a122691411@gmail.com
 
-import os, sys
+import os, sys, time
 import pickle
 import platform
 import threading
@@ -125,18 +125,41 @@ class UI(QMainWindow):
 
             savePickle = 'config/' + filename + '.pickle'
             threading.Thread(target=self.openFile, args=(file, savePickle)).start()
+            self.setWindowTitle(file)
 
+    # 检查上次打开的这个csv文件修改时间和这次打开的这个csv文件的时间是否一致
+    def checkFile(self, file, savePickle):
+        savePickleChange = savePickle + 'change'
+        with open(savePickleChange, 'rb') as f:
+            changeTime = pickle.load(f)
+        nowChangeTime = time.localtime(os.stat(file).st_mtime)
 
+        # 如果时间一致，表明两个文件相同， 不一致则需要重新打开
+        if changeTime == nowChangeTime:
+            return True
+        else:
+            return False
 
     def openFile(self, file, savePickle):
-        if os.path.isfile(savePickle):
+        if os.path.isfile(savePickle) and self.checkFile(file, savePickle):
+            # 该文件曾被打开过， 有pickle缓存
+            # 该文件没有被修改过
             with open(savePickle, 'rb') as f:
                 self.csv_file = pickle.load(f)
         else:
+            # 该文件没有被打开过
+            # 一是打开它
+            # 二是保存该文件的csv类型， 提高下次打开效率
+            # 三是保存该文件的最后修改时间，用于下次打开时判断是否被修改过
             csv_file = pd.read_csv(file)
             self.csv_file = csv_file.fillna('Not set')  # 空值设置为Not set
             with open(savePickle, 'wb') as f:
                 pickle.dump(self.csv_file, f)
+
+            changeTime = time.localtime(os.stat(file).st_mtime)
+            savePickleChange = savePickle + 'change'
+            with open(savePickleChange, 'wb') as f:
+                pickle.dump(changeTime, f)
 
         self.drawMapButton.setEnabled(True)
         self.drawColorMapButton.setEnabled(True)
