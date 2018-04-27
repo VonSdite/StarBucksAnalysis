@@ -173,7 +173,7 @@
 ##### 对top-k算法的分析
 ***注: 可能因计算机环境不同，耗时不同***
 
-- 快速选择算法 平均时间复杂度 O(n)
+- 快速选择算法 平均时间复杂度 O(n), 最坏情况为O(n^2)
 
 - 大顶堆求前k小值 时间复杂度 O(nlogk)
 
@@ -183,10 +183,21 @@
 
 ![时间耗时](README_IMG/时间耗时.png)
 
+![pandas与heap](README_IMG/heapq_pandas.png)
+![pandas与quickSelect](README_IMG/quickSelect_pandas.png)
+
 
 - 由图可知
-    + 一次遍历计算一个点与两万个点间距离的时间耗时大约是1s
-    + 大顶堆的时间大约在100ms， 快速选择在40ms， pandas自带.nsmallest()函数时间在20ms左右
+    + 一次遍历计算一个点与两万个点间距离的时间耗时大约是**1s**
+
+    + 大顶堆的时间大部分在将近**20ms**处， 快速选择大部分在将近**50ms**处， pandas自带.nsmallest()函数时间在**1ms-5ms**左右
+
+    + 快速选择最初在**k值较小**时，用时**比较少**，而且从图中可以看到有较多的**高峰**出现，显然该选择确实是个**不稳定**的算法
+
+    + 大顶堆的时间**比较稳定**，用时相对来说比较少
+
+    + pandas自带的函数**用时少**，且也很**稳定**
+
     + 因此我们topK的获取算法使用 pandas自带.nsmallest()
 
 - 测试代码如下: 
@@ -202,6 +213,7 @@ from math import radians, atan, tan, sin, cos, acos
 
 import plotly.offline as py
 from plotly.graph_objs import *
+
 
 ra = 6378.140  # 赤道半径 (km)
 rb = 6356.755  # 极半径 (km)
@@ -301,27 +313,34 @@ if __name__ == '__main__':
 
         print("k: %d 大顶堆: %.15fs  快速选择: %.15fs  pandas: %.15fs" % (k, h, q, n))
 
-    trace1 = Bar(
-        x=useTime['heap'],
-        y=range(1, 25601),
-        name='大顶堆'
-    )
-    trace2 = Bar(
-        x=useTime['qSelect'],
-        y=range(1, 25601),
-        name='快速选择'
-    )
-    trace3 = Bar(
-        x=useTime['pandas'],
-        y=range(1, 25601),
-        name='pandas'
-    )
-    data = [trace1, trace2, trace3]
-    layout = Layout(
-        barmode='group'
-    )
-    fig = Figure(data=data, layout=layout)
-    py.plot(fig, filename='时间比较')
+    import pickle
+    with open('config/tmp.pickle', 'wb') as f:
+        pickle.dump(useTime, f)
+
+    # with open('config/tmp.pickle', 'rb') as f:
+    #     useTime = pickle.load(f)
+    #
+    # trace1 = Bar(
+    #     y=useTime['heap'],
+    #     x=list(range(1, 25601)),
+    #     name='大顶堆'
+    # )
+    # trace2 = Bar(
+    #     y=useTime['qSelect'],
+    #     x=list(range(1, 25601)),
+    #     name='快速选择'
+    # )
+    # trace3 = Bar(
+    #     y=useTime['pandas'],
+    #     x=list(range(1, 25601)),
+    #     name='pandas'
+    # )
+    # data = [trace1, trace2, trace3]
+    # layout = Layout(
+    #     barmode='group'
+    # )
+    # fig = Figure(data=data, layout=layout)
+    # py.plot(fig, filename='html/时间比较.html')
 
 ```
 

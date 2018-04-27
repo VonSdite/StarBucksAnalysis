@@ -122,30 +122,33 @@ if __name__ == '__main__':
         print("k: %d 大顶堆: %.15fs  快速选择: %.15fs  pandas: %.15fs" % (k, h, q, n))
 
     import pickle
-    with open('tmp.pickle', 'wb') as f:
+    with open('config/tmp.pickle', 'wb') as f:
         pickle.dump(useTime, f)
 
-    trace1 = Bar(
-        x=useTime['heap'],
-        y=list(range(1, 25601)),
-        name='大顶堆'
-    )
-    trace2 = Bar(
-        x=useTime['qSelect'],
-        y=list(range(1, 25601)),
-        name='快速选择'
-    )
-    trace3 = Bar(
-        x=useTime['pandas'],
-        y=list(range(1, 25601)),
-        name='pandas'
-    )
-    data = [trace1, trace2, trace3]
-    layout = Layout(
-        barmode='group'
-    )
-    fig = Figure(data=data, layout=layout)
-    py.plot(fig, filename='时间比较')
+    # with open('config/tmp.pickle', 'rb') as f:
+    #     useTime = pickle.load(f)
+    #
+    # trace1 = Bar(
+    #     y=useTime['heap'],
+    #     x=list(range(1, 25601)),
+    #     name='大顶堆'
+    # )
+    # trace2 = Bar(
+    #     y=useTime['qSelect'],
+    #     x=list(range(1, 25601)),
+    #     name='快速选择'
+    # )
+    # trace3 = Bar(
+    #     y=useTime['pandas'],
+    #     x=list(range(1, 25601)),
+    #     name='pandas'
+    # )
+    # data = [trace1, trace2, trace3]
+    # layout = Layout(
+    #     barmode='group'
+    # )
+    # fig = Figure(data=data, layout=layout)
+    # py.plot(fig, filename='html/时间比较.html')
 
 
 
