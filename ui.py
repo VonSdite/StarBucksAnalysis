@@ -2,18 +2,21 @@
 # __Author__: Sdite
 # __Email__ : a122691411@gmail.com
 
-import os, sys, time
 import pickle
+import os, sys, time
 import platform
 import threading
 import pandas as pd
 from draw import *
 from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import Qt
+from PyQt5.QtWebEngineWidgets import QWebEngineView
+from PyQt5.QtGui import QIcon, QIntValidator
+from PyQt5.QtCore import Qt, QUrl
+from DrawThread import DrawThread
 
 class UI(QMainWindow):
     """docstring for UI"""
+
     def __init__(self):
         super(UI, self).__init__()
         self.initUI()
@@ -21,24 +24,116 @@ class UI(QMainWindow):
     def initUI(self):
         # 将任务栏图标改成 image/StarBucks.png
         if platform.system() == 'Windows':
+            # windows任务栏要这样设置才能和图标一致
             import ctypes
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
                 "image/StarBucks.png")
 
-        self.resize(380, 350)  # 设置窗口初始大小
-        self.center()           # 将窗口居中
         self.setWindowTitle('星巴克数据分析')
         self.setWindowIcon(QIcon('image/StarBucks.png'))
 
-        self.menuBar()
-        self.statusBar()
+        self.mainWidget = QWidget()          # 主窗体控件
+        self.mainLayout = QGridLayout()      # 主窗体layout
 
-        self.setOpenFileMenu()
+        self.menuBar()              # 菜单栏
+        self.statusBar()            # 状态栏
+        self.setOpenFileMenu()      # 打开文件菜单
 
-        self.setButton()
+        self.setButton()            # 设置按钮
+        self.setFindTopKWidget()
+        self.setWebEngineView()
 
+        self.mainWidget.setLayout(self.mainLayout)
+        self.setCentralWidget(self.mainWidget)
+
+        self.resize(1024, 800)
+        self.center()  # 将窗口居中
         self.show()
 
+    def setWebEngineView(self):
+        self.webEngine = QWebEngineView(self)
+        self.mainLayout.addWidget(self.webEngine, 3, 1, 6, 6)
+
+    # top-k的输入框，按钮的控件
+    def setFindTopKWidget(self):
+        longitudeLabel = QLabel()
+        latitudeLabel = QLabel()
+        kLabel = QLabel()
+
+        longitudeLabel.setText("经度: ")
+        latitudeLabel.setText("纬度: ")
+        kLabel.setText("k: ")
+
+        self.longitudeEdit = QLineEdit()
+        self.latitudeEdit = QLineEdit()
+        self.kEdit = QLineEdit()
+
+        self.findTopKButton = QPushButton()
+        self.findTopKButton.setText("查找top-k")
+        self.findTopKButton.setEnabled(False)
+        self.findTopKButton.clicked.connect(self.findSlot)
+
+        hBox = QHBoxLayout(self)
+        hBox.addWidget(longitudeLabel)
+        hBox.addWidget(self.longitudeEdit, 0)
+        hBox.addWidget(latitudeLabel)
+        hBox.addWidget(self.latitudeEdit, 0)
+        hBox.addWidget(kLabel)
+        hBox.addWidget(self.kEdit, 0)
+        hBox.addWidget(self.findTopKButton, 0)
+
+        hWidget = QWidget()
+        hWidget.setLayout(hBox)
+        self.mainLayout.addWidget(hWidget, 1, 1, 1, 6)
+
+    def findSlot(self):
+        longitude = self.longitudeEdit.text()
+        latitude = self.latitudeEdit.text()
+        k = self.kEdit.text()
+
+        if longitude == "":
+            QMessageBox.warning(self, "警告", "请输入经度", QMessageBox.Ok)
+            return
+
+        try:
+            longitude = float(longitude)
+            if longitude > 180 or longitude < -180:
+                QMessageBox.warning(self, "错误", "经度在-180~180之间", QMessageBox.Ok)
+                return
+        except:
+            QMessageBox.warning(self, "错误", "请输入数字", QMessageBox.Ok)
+            return
+
+        if latitude == "":
+            QMessageBox.warning(self, "警告", "请输入纬度", QMessageBox.Ok)
+            return
+
+        try:
+            latitude = float(latitude)
+            if latitude > 90 or latitude < -90:
+                QMessageBox.warning(self, "错误", "纬度在-90~90之间", QMessageBox.Ok)
+                return
+        except:
+            QMessageBox.warning(self, "错误", "请输入数字", QMessageBox.Ok)
+            return
+
+        if k == "":
+            QMessageBox.warning(self, "警告", "请输入k值", QMessageBox.Ok)
+            return
+
+        k = int(k)
+
+        self.t = DrawThread(target=drawTopKMap,
+                            args=(self.csv_file,
+                                  longitude,
+                                  latitude,
+                                  k,
+                                  'html/topKMap.html', 'topK点图'))
+        self.t.start()
+        self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/topKMap.html'))
+
+
+    # 设置基本按钮， 后续可能要重写
     def setButton(self):
         self.drawMapButton = QPushButton('世界分布图', self)
 
@@ -59,8 +154,8 @@ class UI(QMainWindow):
         self.drawMapButton.clicked.connect(self.drawMap)
         self.drawColorMapButton.clicked.connect(self.drawColorMap)
         self.countStoreByTimezoneButton_bar.clicked.connect(
-            lambda : self.drawBar(self.csv_file['Timezone'],
-                                  'html/timezoneBar.html', '时区店铺数量柱状图'))
+            lambda: self.drawBar(self.csv_file['Timezone'],
+                                 'html/timezoneBar.html', '时区店铺数量柱状图'))
         self.countStoreByTimezoneButton_pie.clicked.connect(
             lambda: self.drawPie(self.csv_file['Timezone'],
                                  'html/timezonePie.html', '时区店铺数量饼图'))
@@ -71,36 +166,44 @@ class UI(QMainWindow):
             lambda: self.drawPie(self.csv_file['Country'],
                                  'html/countryPie.html', '国家店铺数量饼图'))
 
-        mainWidget = QWidget()
-        boxLayout = QVBoxLayout()
+        self.mainLayout.addWidget(self.drawMapButton, 2, 1)
+        self.mainLayout.addWidget(self.drawColorMapButton, 2, 2)
+        self.mainLayout.addWidget(self.countStoreByTimezoneButton_bar, 2, 3)
+        self.mainLayout.addWidget(self.countStoreByTimezoneButton_pie, 2, 4)
+        self.mainLayout.addWidget(self.countStoreByCountryButton_bar, 2, 5)
+        self.mainLayout.addWidget(self.countStoreByCountryButton_pie, 2, 6)
 
-        boxLayout.addWidget(self.drawMapButton)
-        boxLayout.addWidget(self.drawColorMapButton)
-        boxLayout.addWidget(self.countStoreByTimezoneButton_bar)
-        boxLayout.addWidget(self.countStoreByTimezoneButton_pie)
-        boxLayout.addWidget(self.countStoreByCountryButton_bar)
-        boxLayout.addWidget(self.countStoreByCountryButton_pie)
+    # 加载html
+    def showInWebEngineView(self, fileName):
+        self.findTopKButton.setToolTip(self.t.time)
+        self.webEngine.load(QUrl.fromLocalFile(fileName))
 
-        mainWidget.setLayout(boxLayout)
 
-        self.setCentralWidget(mainWidget)
-
+    # 画时区店铺数量渐变彩色点
     def drawMap(self):
-        threading.Thread(target=drawMap, args=(self.csv_file,
-                                               'html/map.html',
-                                               '世界分布图(不同时区不同颜色点)')).start()
+        self.t = DrawThread(drawMap, (self.csv_file, 'html/map.html', '不同时区店铺数量渐变图'))
+        self.t.start()
+        self.t.endTrigger.connect(lambda :self.showInWebEngineView('/html/map.html'))
 
+    # 画国家分布彩色渐变图
     def drawColorMap(self):
-        threading.Thread(target=drawColorMaps,
+        self.t = DrawThread(target=drawColorMaps,
                          args=(self.csv_file['Country'],
-                               'html/colorMap.html', '国家分布彩色图')).start()
+                               'html/colorMap.html', '国家分布彩色图'))
+        self.t.start()
+        self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/colorMap.html'))
 
+    # 画柱状图
     def drawBar(self, data, fileName='html/bar.html', title=''):
-        threading.Thread(target=drawBar, args=(data, fileName, title)).start()
+        self.t = DrawThread(target=drawBar, args=(data, fileName, title))
+        self.t.start()
+        self.t.endTrigger.connect(lambda: self.showInWebEngineView('/'+fileName))
 
+    # 画饼图
     def drawPie(self, data, fileName='html/pie.hmtl', title=''):
-        threading.Thread(target=drawPie, args=(data, fileName, title)).start()
-
+        self.t = DrawThread(target=drawPie, args=(data, fileName, title))
+        self.t.start()
+        self.t.endTrigger.connect(lambda: self.showInWebEngineView('/' + fileName))
 
     # 设置打开文件的功能
     def setOpenFileMenu(self):
@@ -151,8 +254,7 @@ class UI(QMainWindow):
             # 一是打开它
             # 二是保存该文件的csv类型， 提高下次打开效率
             # 三是保存该文件的最后修改时间，用于下次打开时判断是否被修改过
-            csv_file = pd.read_csv(file)
-            self.csv_file = csv_file.fillna('Not set')  # 空值设置为Not set
+            self.csv_file = pd.read_csv(file)
             with open(savePickle, 'wb') as f:
                 pickle.dump(self.csv_file, f)
 
@@ -161,12 +263,19 @@ class UI(QMainWindow):
             with open(savePickleChange, 'wb') as f:
                 pickle.dump(changeTime, f)
 
+        self.csv_file.fillna(0)
         self.drawMapButton.setEnabled(True)
         self.drawColorMapButton.setEnabled(True)
         self.countStoreByTimezoneButton_bar.setEnabled(True)
         self.countStoreByTimezoneButton_pie.setEnabled(True)
         self.countStoreByCountryButton_bar.setEnabled(True)
         self.countStoreByCountryButton_pie.setEnabled(True)
+        self.findTopKButton.setEnabled(True)
+
+        kIntValidator = QIntValidator(self)
+        kIntValidator.setRange(0, len(self.csv_file))
+        self.kEdit.setPlaceholderText("输入0-"+str(len(self.csv_file))+"间的整数值")
+        self.kEdit.setValidator(kIntValidator)
 
     # 窗口居中
     def center(self):
@@ -174,11 +283,3 @@ class UI(QMainWindow):
         cp = QDesktopWidget().availableGeometry().center()
         qr.moveCenter(cp)
         self.move(qr.topLeft())
-
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-
-    ui = UI()
-
-    sys.exit(app.exec_())
