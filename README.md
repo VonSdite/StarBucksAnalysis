@@ -325,4 +325,8 @@ if __name__ == '__main__':
 
 ```
 
+##### 测试驱动相关
 
+- 编写findTopK函数的测试:
+![findTopK函数测试](README_IMG/findTopK函数测试.png)
+![findTopK函数测试结果](README_IMG/resultToFindTopK.png)

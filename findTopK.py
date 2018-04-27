@@ -119,21 +119,25 @@ if __name__ == '__main__':
         n = end - start
         useTime['pandas'].append(n)
 
-        # print("k: %d 大顶堆: %.15fs  快速选择: %.15fs  pandas: %.15fs" % (k, h, q, n))
+        print("k: %d 大顶堆: %.15fs  快速选择: %.15fs  pandas: %.15fs" % (k, h, q, n))
+
+    import pickle
+    with open('tmp.pickle', 'wb') as f:
+        pickle.dump(useTime, f)
 
     trace1 = Bar(
         x=useTime['heap'],
-        y=range(1, 25601),
+        y=list(range(1, 25601)),
         name='大顶堆'
     )
     trace2 = Bar(
         x=useTime['qSelect'],
-        y=range(1, 25601),
+        y=list(range(1, 25601)),
         name='快速选择'
     )
     trace3 = Bar(
         x=useTime['pandas'],
-        y=range(1, 25601),
+        y=list(range(1, 25601)),
         name='pandas'
     )
     data = [trace1, trace2, trace3]
