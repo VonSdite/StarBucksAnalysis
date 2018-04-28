@@ -175,7 +175,7 @@ class UI(QMainWindow):
 
     # 加载html
     def showInWebEngineView(self, fileName):
-        self.findTopKButton.setToolTip(self.t.time)
+        self.setStatusTip(self.t.time)
         self.webEngine.load(QUrl.fromLocalFile(fileName))
 
 
