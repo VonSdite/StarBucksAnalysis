@@ -46,7 +46,7 @@ class UI(QMainWindow):
         self.mainWidget.setLayout(self.mainLayout)
         self.setCentralWidget(self.mainWidget)
 
-        self.resize(1024, 800)
+        self.adjustSize()
         self.center()  # 将窗口居中
         self.show()
 
@@ -81,6 +81,10 @@ class UI(QMainWindow):
         hBox.addWidget(kLabel)
         hBox.addWidget(self.kEdit, 0)
         hBox.addWidget(self.findTopKButton, 0)
+
+        self.longitudeEdit.setEnabled(False)
+        self.latitudeEdit.setEnabled(False)
+        self.kEdit.setEnabled(False)
 
         hWidget = QWidget()
         hWidget.setLayout(hBox)
@@ -271,6 +275,10 @@ class UI(QMainWindow):
         self.countStoreByCountryButton_bar.setEnabled(True)
         self.countStoreByCountryButton_pie.setEnabled(True)
         self.findTopKButton.setEnabled(True)
+
+        self.longitudeEdit.setEnabled(True)
+        self.latitudeEdit.setEnabled(True)
+        self.kEdit.setEnabled(True)
 
         kIntValidator = QIntValidator(self)
         kIntValidator.setRange(0, len(self.csv_file))

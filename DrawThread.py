@@ -2,8 +2,7 @@
 # __Author__: Sdite
 # __Email__ : a122691411@gmail.com
 
-from PyQt5.QtCore import QThread
-from PyQt5.Qt import pyqtSignal
+from PyQt5.QtCore import QThread, pyqtSignal
 import time
 
 class DrawThread(QThread):
