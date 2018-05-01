@@ -140,6 +140,7 @@ def drawMap(csv_file, fileName="html/map.html", title=''):
 def drawTopKMap(csv_file, lon, lat, topK, fileName="html/topKMap.html", title=''):
     topKInfo = findTopK(csv_file, lon, lat, topK)
 
+    # print(topKInfo)
     topKInfo = topKInfo.fillna('Not set')  # 将空值设为Not set
     topKInfo['info'] = "Store Number: " + topKInfo["Store Number"] + "</br></br>" \
                        + "Store Name: " + topKInfo["Store Name"] + "</br>" \
@@ -182,3 +183,5 @@ def drawTopKMap(csv_file, lon, lat, topK, fileName="html/topKMap.html", title=''
 
     fig = dict(data=data, layout=layout)
     py.plot(fig, filename=fileName, auto_open=False)
+
+# def drawRangeMap(csv_file, lon, lat, range, fileName="html/rangeMap.html", title=''):
