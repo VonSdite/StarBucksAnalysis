@@ -316,13 +316,11 @@ class UI(QMainWindow):
         self.countStoreByCountryButton_bar.setEnabled(True)
         self.countStoreByCountryButton_pie.setEnabled(True)
         self.findTopKButton.setEnabled(True)
+        self.findRangeButton.setEnabled(True)
 
         self.longitudeEdit.setEnabled(True)
         self.latitudeEdit.setEnabled(True)
         self.kEdit.setEnabled(True)
-        #
-        # self.RlongitudeEdit.setEnabled(True)
-        # self.RlatitudeEdit.setEnabled(True)
         self.rangeEdit.setEnabled(True)
 
         kIntValidator = QIntValidator(self)

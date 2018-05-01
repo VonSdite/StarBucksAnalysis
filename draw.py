@@ -10,8 +10,8 @@ import plotly.offline as py
 from plotly.graph_objs import *
 from PyQt5.QtCore import QUrl
 
-from findTopK import findTopK
-
+from findTopK import FindTopK
+from findRange import FindRange
 mapbox_access_token = 'pk.eyJ1Ijoic2RpdGUiLCJhIjoiY2pmajloaWJxMGw2NjJ4dW1za2c2cDNkZiJ9.KNk-JYP0chw-NFPffGs0eg'
 
 
@@ -138,7 +138,7 @@ def drawMap(csv_file, fileName="html/map.html", title=''):
 
 
 def drawTopKMap(csv_file, lon, lat, topK, fileName="html/topKMap.html", title=''):
-    topKInfo = findTopK(csv_file, lon, lat, topK)
+    topKInfo = FindTopK(csv_file, lon, lat, topK)
 
     # print(topKInfo)
     topKInfo = topKInfo.fillna('Not set')  # 将空值设为Not set
@@ -185,4 +185,7 @@ def drawTopKMap(csv_file, lon, lat, topK, fileName="html/topKMap.html", title=''
     py.plot(fig, filename=fileName, auto_open=False)
 
 def drawRangeMap(csv_file, lon, lat, range, fileName="html/rangeMap.html", title=''):
+
+    rangeInfo = FindRange(csv_file, lon, lat, range)
+    print(rangeInfo)
     pass

@@ -11,7 +11,7 @@ from calcDistance import calcDistance
 
 
 
-def findTopK(csv_file, longitude, latitude, topK):
+def FindTopK(csv_file, longitude, latitude, topK):
     csv_file['Distance'] = csv_file.apply(
         lambda x:calcDistance(longitude, latitude, x.Longitude, x.Latitude),
                               axis=1)
