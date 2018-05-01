@@ -54,19 +54,28 @@ class UI(QMainWindow):
         self.webEngine = QWebEngineView(self)
         self.mainLayout.addWidget(self.webEngine, 3, 1, 6, 6)
 
+
     # top-k的输入框，按钮的控件
     def setFindTopKWidget(self):
         longitudeLabel = QLabel()
         latitudeLabel = QLabel()
+        rangeLabel = QLabel()
         kLabel = QLabel()
 
         longitudeLabel.setText("经度: ")
         latitudeLabel.setText("纬度: ")
+        rangeLabel.setText("range:")
         kLabel.setText("k: ")
 
         self.longitudeEdit = QLineEdit()
         self.latitudeEdit = QLineEdit()
+        self.rangeEdit = QLineEdit()
         self.kEdit = QLineEdit()
+
+        self.findRangeButton = QPushButton()
+        self.findRangeButton.setText("查找range")
+        self.findRangeButton.setEnabled(False)
+        # self.findRangeButton.clicked.connect(self.findSlot)
 
         self.findTopKButton = QPushButton()
         self.findTopKButton.setText("查找top-k")
@@ -78,17 +87,24 @@ class UI(QMainWindow):
         hBox.addWidget(self.longitudeEdit, 0)
         hBox.addWidget(latitudeLabel)
         hBox.addWidget(self.latitudeEdit, 0)
+        hBox.addWidget(rangeLabel)
+        hBox.addWidget(self.rangeEdit,0)
         hBox.addWidget(kLabel)
         hBox.addWidget(self.kEdit, 0)
+        hBox.addWidget(self.findRangeButton,0)
         hBox.addWidget(self.findTopKButton, 0)
 
         self.longitudeEdit.setEnabled(False)
         self.latitudeEdit.setEnabled(False)
+        self.rangeEdit.setEnabled(False)
         self.kEdit.setEnabled(False)
 
         hWidget = QWidget()
         hWidget.setLayout(hBox)
         self.mainLayout.addWidget(hWidget, 1, 1, 1, 6)
+
+    def checkLong
+
 
     def findSlot(self):
         longitude = self.longitudeEdit.text()
@@ -136,7 +152,6 @@ class UI(QMainWindow):
         self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/topKMap.html'))
         self.t.start()
 
-
     # 设置基本按钮， 后续可能要重写
     def setButton(self):
         self.drawMapButton = QPushButton('世界分布图', self)
@@ -176,6 +191,7 @@ class UI(QMainWindow):
         self.mainLayout.addWidget(self.countStoreByTimezoneButton_pie, 2, 4)
         self.mainLayout.addWidget(self.countStoreByCountryButton_bar, 2, 5)
         self.mainLayout.addWidget(self.countStoreByCountryButton_pie, 2, 6)
+
 
     # 加载html
     def showInWebEngineView(self, fileName):
@@ -279,6 +295,10 @@ class UI(QMainWindow):
         self.longitudeEdit.setEnabled(True)
         self.latitudeEdit.setEnabled(True)
         self.kEdit.setEnabled(True)
+        #
+        # self.RlongitudeEdit.setEnabled(True)
+        # self.RlatitudeEdit.setEnabled(True)
+        self.rangeEdit.setEnabled(True)
 
         kIntValidator = QIntValidator(self)
         kIntValidator.setRange(0, len(self.csv_file))
