@@ -133,8 +133,8 @@ class UI(QMainWindow):
                                   latitude,
                                   k,
                                   'html/topKMap.html', 'topK点图'))
-        self.t.start()
         self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/topKMap.html'))
+        self.t.start()
 
 
     # 设置基本按钮， 后续可能要重写
@@ -186,28 +186,28 @@ class UI(QMainWindow):
     # 画时区店铺数量渐变彩色点
     def drawMap(self):
         self.t = DrawThread(drawMap, (self.csv_file, 'html/map.html', '不同时区店铺数量渐变图'))
-        self.t.start()
         self.t.endTrigger.connect(lambda :self.showInWebEngineView('/html/map.html'))
+        self.t.start()
 
     # 画国家分布彩色渐变图
     def drawColorMap(self):
         self.t = DrawThread(target=drawColorMaps,
                          args=(self.csv_file['Country'],
                                'html/colorMap.html', '国家分布彩色图'))
-        self.t.start()
         self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/colorMap.html'))
+        self.t.start()
 
     # 画柱状图
     def drawBar(self, data, fileName='html/bar.html', title=''):
         self.t = DrawThread(target=drawBar, args=(data, fileName, title))
-        self.t.start()
         self.t.endTrigger.connect(lambda: self.showInWebEngineView('/'+fileName))
+        self.t.start()
 
     # 画饼图
     def drawPie(self, data, fileName='html/pie.hmtl', title=''):
         self.t = DrawThread(target=drawPie, args=(data, fileName, title))
-        self.t.start()
         self.t.endTrigger.connect(lambda: self.showInWebEngineView('/' + fileName))
+        self.t.start()
 
     # 设置打开文件的功能
     def setOpenFileMenu(self):
