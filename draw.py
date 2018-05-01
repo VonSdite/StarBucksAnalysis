@@ -184,4 +184,5 @@ def drawTopKMap(csv_file, lon, lat, topK, fileName="html/topKMap.html", title=''
     fig = dict(data=data, layout=layout)
     py.plot(fig, filename=fileName, auto_open=False)
 
-# def drawRangeMap(csv_file, lon, lat, range, fileName="html/rangeMap.html", title=''):
+def drawRangeMap(csv_file, lon, lat, range, fileName="html/rangeMap.html", title=''):
+    pass

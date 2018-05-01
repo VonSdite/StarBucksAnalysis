@@ -12,7 +12,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtGui import QIcon, QIntValidator
 from PyQt5.QtCore import Qt, QUrl
-from DrawThread import DrawThread
+from drawThread import DrawThread
 
 class UI(QMainWindow):
     """docstring for UI"""
@@ -75,7 +75,7 @@ class UI(QMainWindow):
         self.findRangeButton = QPushButton()
         self.findRangeButton.setText("查找range")
         self.findRangeButton.setEnabled(False)
-        # self.findRangeButton.clicked.connect(self.findSlot)
+        self.findRangeButton.clicked.connect(self.fingRange)
 
         self.findTopKButton = QPushButton()
         self.findTopKButton.setText("查找top-k")
@@ -103,39 +103,64 @@ class UI(QMainWindow):
         hWidget.setLayout(hBox)
         self.mainLayout.addWidget(hWidget, 1, 1, 1, 6)
 
-    def checkLong
+    def checkLongAndLat(self):
+        self.longitude = self.longitudeEdit.text()
+        self.latitude = self.latitudeEdit.text()
+        if self.longitude == "":
+            QMessageBox.warning(self, "警告", "请输入经度", QMessageBox.Ok)
+            return False
+
+        try:
+            self.longitude = float(self.longitude)
+            if self.longitude > 180 or self.longitude < -180:
+                QMessageBox.warning(self, "错误", "经度在-180~180之间", QMessageBox.Ok)
+                return False
+        except:
+            QMessageBox.warning(self, "错误", "请输入数字", QMessageBox.Ok)
+            return False
+
+        if self.latitude == "":
+            QMessageBox.warning(self, "警告", "请输入纬度", QMessageBox.Ok)
+            return False
+
+        try:
+            self.latitude = float(self.latitude)
+            if self.latitude > 90 or self.latitude < -90:
+                QMessageBox.warning(self, "错误", "纬度在-90~90之间", QMessageBox.Ok)
+                return False
+        except:
+            QMessageBox.warning(self, "错误", "请输入数字", QMessageBox.Ok)
+            return False
+        return True
+
+    def fingRange(self):
+
+        if not self.checkLongAndLat():
+            return
+
+        r = self.rangeEdit.text()
+
+        if r == "":
+            QMessageBox.warning(self, "警告", "请输入range值", QMessageBox.Ok)
+            return
+
+        r = int(r)
+
+        self.t = DrawThread(target=drawRangeMap,
+                            args=(self.csv_file,
+                                  self.longitude,
+                                  self.latitude,
+                                  r,
+                                  'html/RangeMap.html', 'topK点图'))
+        self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/RangeMap.html'))
+        self.t.start()
 
 
     def findSlot(self):
-        longitude = self.longitudeEdit.text()
-        latitude = self.latitudeEdit.text()
+        if not self.checkLongAndLat():
+            return
+
         k = self.kEdit.text()
-
-        if longitude == "":
-            QMessageBox.warning(self, "警告", "请输入经度", QMessageBox.Ok)
-            return
-
-        try:
-            longitude = float(longitude)
-            if longitude > 180 or longitude < -180:
-                QMessageBox.warning(self, "错误", "经度在-180~180之间", QMessageBox.Ok)
-                return
-        except:
-            QMessageBox.warning(self, "错误", "请输入数字", QMessageBox.Ok)
-            return
-
-        if latitude == "":
-            QMessageBox.warning(self, "警告", "请输入纬度", QMessageBox.Ok)
-            return
-
-        try:
-            latitude = float(latitude)
-            if latitude > 90 or latitude < -90:
-                QMessageBox.warning(self, "错误", "纬度在-90~90之间", QMessageBox.Ok)
-                return
-        except:
-            QMessageBox.warning(self, "错误", "请输入数字", QMessageBox.Ok)
-            return
 
         if k == "":
             QMessageBox.warning(self, "警告", "请输入k值", QMessageBox.Ok)
@@ -145,8 +170,8 @@ class UI(QMainWindow):
 
         self.t = DrawThread(target=drawTopKMap,
                             args=(self.csv_file,
-                                  longitude,
-                                  latitude,
+                                  self.longitude,
+                                  self.latitude,
                                   k,
                                   'html/topKMap.html', 'topK点图'))
         self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/topKMap.html'))
