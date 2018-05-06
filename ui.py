@@ -151,7 +151,7 @@ class UI(QMainWindow):
                                   self.longitude,
                                   self.latitude,
                                   r,
-                                  'html/RangeMap.html', 'topK点图'))
+                                  'html/RangeMap.html', '距离range图'))
         self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/RangeMap.html'))
         self.t.start()
 
