@@ -136,9 +136,8 @@ def drawMap(csv_file, fileName="html/map.html", title=''):
     fig = dict(data=data, layout=layout)
     py.plot(fig, filename=fileName, auto_open=False)
 
-
-def drawTopKMap(csv_file, lon, lat, topK, fileName="html/topKMap.html", title=''):
-    topKInfo = FindTopK(csv_file, lon, lat, topK)
+def drawTopKMap(topKInfo, lon, lat, topK, fileName="html/topKMap.html", title=''):
+    # topKInfo = FindTopK(csv_file, lon, lat, topK)
 
     topKInfo = topKInfo.fillna('Not set')  # 将空值设为Not set
     topKInfo['info'] = "Store Number: " + topKInfo["Store Number"] + "</br></br>" \
@@ -219,8 +218,10 @@ def drawRangeMap(csv_file, lon, lat, range, fileName="html/rangeMap.html", title
         name="标记点",
     ))
 
+
     layout = Layout(
         title=title,
+        showlegend=True,
         autosize=True,
         hovermode='closest',
         mapbox=dict(
@@ -229,5 +230,20 @@ def drawRangeMap(csv_file, lon, lat, range, fileName="html/rangeMap.html", title
             pitch=0, zoom=1),
     )
 
+    # layout = dict(
+    #     title = title,
+    #     showlengend = True,
+    #         geo=dict(
+    #             scope='usa',
+    #             projection=dict(type='albers usa'),
+    #             showland=True,
+    #             landcolor='rgb(217, 217, 217)',
+    #             subunitwidth=1,
+    #             countrywidth=1,
+    #             subunitcolor="rgb(255, 255, 255)",
+    #             countrycolor="rgb(255, 255, 255)"
+    #     )
+    # )
+
     fig = dict(data=data, layout=layout)
-    py.plot(fig, filename=fileName, auto_open=False)
+    py.plot(fig, validate=False, filename=fileName, auto_open=False)

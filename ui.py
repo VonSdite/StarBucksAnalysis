@@ -6,6 +6,7 @@ import pickle
 import os, sys, time
 import platform
 import threading
+from findKeyword import findkw
 import pandas as pd
 from draw import *
 from PyQt5.QtWidgets import *
@@ -61,16 +62,19 @@ class UI(QMainWindow):
         latitudeLabel = QLabel()
         rangeLabel = QLabel()
         kLabel = QLabel()
+        KeywordLabel = QLabel()
 
         longitudeLabel.setText("经度: ")
         latitudeLabel.setText("纬度: ")
         rangeLabel.setText("range:")
         kLabel.setText("k: ")
+        KeywordLabel.setText("关键词：")
 
         self.longitudeEdit = QLineEdit()
         self.latitudeEdit = QLineEdit()
         self.rangeEdit = QLineEdit()
         self.kEdit = QLineEdit()
+        self.KeywordEdit = QLineEdit()
 
         self.findRangeButton = QPushButton()
         self.findRangeButton.setText("查找range")
@@ -88,16 +92,19 @@ class UI(QMainWindow):
         hBox.addWidget(latitudeLabel)
         hBox.addWidget(self.latitudeEdit, 0)
         hBox.addWidget(rangeLabel)
-        hBox.addWidget(self.rangeEdit,0)
+        hBox.addWidget(self.rangeEdit, 0)
         hBox.addWidget(kLabel)
         hBox.addWidget(self.kEdit, 0)
-        hBox.addWidget(self.findRangeButton,0)
+        hBox.addWidget(KeywordLabel)
+        hBox.addWidget(self.KeywordEdit, 0)
+        hBox.addWidget(self.findRangeButton, 0)
         hBox.addWidget(self.findTopKButton, 0)
 
         self.longitudeEdit.setEnabled(False)
         self.latitudeEdit.setEnabled(False)
         self.rangeEdit.setEnabled(False)
         self.kEdit.setEnabled(False)
+        self.KeywordEdit.setEnabled(False)
 
         hWidget = QWidget()
         hWidget.setLayout(hBox)
@@ -161,6 +168,13 @@ class UI(QMainWindow):
             return
 
         k = self.kEdit.text()
+        Keyword = self.KeywordEdit.text()
+        topKInfo = self.csv_file
+
+        if Keyword != "":
+            topKInfo  = findkw(self.csv_file, Keyword, k, self.longitude, self.latitude)
+        else:
+            topKInfo = FindTopK(self.csv_file, self.longitude, self.latitude, k)
 
         if k == "":
             QMessageBox.warning(self, "警告", "请输入k值", QMessageBox.Ok)
@@ -169,7 +183,7 @@ class UI(QMainWindow):
         k = int(k)
 
         self.t = DrawThread(target=drawTopKMap,
-                            args=(self.csv_file,
+                            args=(topKInfo,
                                   self.longitude,
                                   self.latitude,
                                   k,
@@ -322,6 +336,7 @@ class UI(QMainWindow):
         self.latitudeEdit.setEnabled(True)
         self.kEdit.setEnabled(True)
         self.rangeEdit.setEnabled(True)
+        self.KeywordEdit.setEnabled(True)
 
         kIntValidator = QIntValidator(self)
         kIntValidator.setRange(0, len(self.csv_file))
