@@ -21,3 +21,6 @@ def calcDistance(lon_a, lat_a, lon_b, lat_b):
     dr = flatten / 8 * (c1 - c2)
     distance = ra * (xx + dr)
     return distance
+
+def calcReverseDistance(lon_a, lat_a, lon_b, lat_b):
+    return -calcDistance(lon_a, lat_a, lon_b, lat_b)
