@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+# __Author__: Sdite, amyy4, JX-Soleil, hzgege
+# __Email__ : a122691411@gmail.com
+
 import pandas as pd
 import jieba
 from calcDistance import calcDistance

@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+# __Author__: Sdite, amyy4, JX-Soleil, hzgege
+# __Email__ : a122691411@gmail.com
+
 from math import radians, atan, tan, sin, cos, acos
 
 #radians 角度转弧度

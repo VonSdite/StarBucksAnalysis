@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# __Author__: Sdite
+# __Author__: Sdite, amyy4, JX-Soleil, hzgege
 # __Email__ : a122691411@gmail.com
 
 import os
@@ -10,8 +10,9 @@ import plotly.offline as py
 from plotly.graph_objs import *
 from PyQt5.QtCore import QUrl
 
-from findTopK import FindTopK
-from findRange import FindRange
+from findTopK import findTopK
+from findRange import findRange
+
 mapbox_access_token = 'pk.eyJ1Ijoic2RpdGUiLCJhIjoiY2pmajloaWJxMGw2NjJ4dW1za2c2cDNkZiJ9.KNk-JYP0chw-NFPffGs0eg'
 
 
@@ -92,6 +93,7 @@ def drawMap(csv_file, fileName="html/map.html", title=''):
     # 店铺基本信息
     def int64ToStr(count):
         return str(count)
+
     csv_file = csv_file.fillna('Not set')
     csv_file['info'] = "Store Number: " + csv_file["Store Number"] + "</br></br>" \
                        + "Store Name: " + csv_file["Store Name"] + "</br>" \
@@ -128,16 +130,20 @@ def drawMap(csv_file, fileName="html/map.html", title=''):
         autosize=True,
         hovermode='closest',
         mapbox=dict(
-                    accesstoken=mapbox_access_token,
-                    bearing=0,
-                    pitch=0, zoom=1),
+            accesstoken=mapbox_access_token,
+            bearing=0,
+            pitch=0, zoom=1),
     )
 
     fig = dict(data=data, layout=layout)
     py.plot(fig, filename=fileName, auto_open=False)
 
-def drawTopKMap(topKInfo, lon, lat, topK, fileName="html/topKMap.html", title=''):
-    # topKInfo = FindTopK(csv_file, lon, lat, topK)
+
+def drawTopKMap(csv_file, lon, lat, topK, keyWord, fileName="html/topKMap.html", title=''):
+    if keyWord == "":
+        topKInfo = findTopK(csv_file, lon, lat, topK)
+    else:
+        return
 
     topKInfo = topKInfo.fillna('Not set')  # 将空值设为Not set
     topKInfo['info'] = "Store Number: " + topKInfo["Store Number"] + "</br></br>" \
@@ -182,19 +188,21 @@ def drawTopKMap(topKInfo, lon, lat, topK, fileName="html/topKMap.html", title=''
     fig = dict(data=data, layout=layout)
     py.plot(fig, filename=fileName, auto_open=False)
 
-def drawRangeMap(csv_file, lon, lat, range, fileName="html/rangeMap.html", title=''):
 
-    rangeInfo = FindRange(csv_file, lon, lat, range)
+def drawRangeMap(csv_file, lon, lat, range, fileName="html/rangeMap.html", title=''):
+    rangeInfo = findRange(csv_file, lon, lat, range)
 
     rangeInfo = rangeInfo.fillna('Not set')
-    rangeInfo["Distance"] = [str(key) for key in rangeInfo["Distance"]]
+
+    # 将数值强转成str,后续用于字符串拼接
+    rangeInfo["Distance"] = [str(key) + "km" for key in rangeInfo["Distance"]]
 
     rangeInfo['info'] = "Store Number: " + rangeInfo["Store Number"] + "</br></br>" \
-                       + "Store Name: " + rangeInfo["Store Name"] + "</br>" \
-                       + "Street Address: " + rangeInfo["Street Address"] + "</br>" \
-                       + "Postcode: " + rangeInfo["Postcode"] + "</br>" \
-                       + "Phone Number: " + rangeInfo["Phone Number"] + "</br>" \
-                       + "Distance: " + rangeInfo["Distance"] + "</br>"
+                        + "Store Name: " + rangeInfo["Store Name"] + "</br>" \
+                        + "Street Address: " + rangeInfo["Street Address"] + "</br>" \
+                        + "Postcode: " + rangeInfo["Postcode"] + "</br>" \
+                        + "Phone Number: " + rangeInfo["Phone Number"] + "</br>" \
+                        + "Distance: " + rangeInfo["Distance"] + "</br>"
     data = []
     data.append(Scattermapbox(
         lat=rangeInfo['Latitude'],
@@ -212,12 +220,11 @@ def drawRangeMap(csv_file, lon, lat, range, fileName="html/rangeMap.html", title
         lon=[lon],
         mode='markers',
         marker=Marker(size=10, color='red'),
-        text=["标记点</br></br>经度:%f  纬度: %f 距离: %f" % (lon, lat, range)],
+        text=["标记点</br></br>经度:%f  纬度: %f 半径: %f" % (lon, lat, range)],
         textposition='top left',
         hoverinfo='text',
         name="标记点",
     ))
-
 
     layout = Layout(
         title=title,
@@ -230,20 +237,9 @@ def drawRangeMap(csv_file, lon, lat, range, fileName="html/rangeMap.html", title
             pitch=0, zoom=1),
     )
 
-    # layout = dict(
-    #     title = title,
-    #     showlengend = True,
-    #         geo=dict(
-    #             scope='usa',
-    #             projection=dict(type='albers usa'),
-    #             showland=True,
-    #             landcolor='rgb(217, 217, 217)',
-    #             subunitwidth=1,
-    #             countrywidth=1,
-    #             subunitcolor="rgb(255, 255, 255)",
-    #             countrycolor="rgb(255, 255, 255)"
-    #     )
-    # )
-
     fig = dict(data=data, layout=layout)
-    py.plot(fig, validate=False, filename=fileName, auto_open=False)
+    py.plot(fig, filename=fileName, auto_open=False)
+
+if __name__ == '__main__':
+    csv_file = pd.read_csv('directory.csv')
+    drawRangeMap(csv_file, 113, 23, 50)
