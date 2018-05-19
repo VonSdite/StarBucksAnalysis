@@ -8,6 +8,7 @@ from math import radians, atan, tan, sin, cos, acos
 ra = 6378.140  # 赤道半径 (km)
 rb = 6356.755  # 极半径 (km)
 flatten = (ra - rb) / ra  # 地球扁率
+
 def calcDistance(lon_a, lat_a, lon_b, lat_b):
     rad_lat_A = radians(lat_a)
     rad_lng_A = radians(lon_a)

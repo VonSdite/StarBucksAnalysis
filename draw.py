@@ -239,7 +239,3 @@ def drawRangeMap(csv_file, lon, lat, range, fileName="html/rangeMap.html", title
 
     fig = dict(data=data, layout=layout)
     py.plot(fig, filename=fileName, auto_open=False)
-
-if __name__ == '__main__':
-    csv_file = pd.read_csv('directory.csv')
-    drawRangeMap(csv_file, 113, 23, 50)

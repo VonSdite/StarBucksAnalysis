@@ -56,9 +56,6 @@ class UI(QMainWindow):
         self.webEngine = QWebEngineView(self)
         self.mainLayout.addWidget(self.webEngine, 1, 8, 8, 11)
 
-    def test(self):
-        QMessageBox.information(self, "Test", "content", QMessageBox.Ok)
-
     # top-k的输入框，按钮的控件
     def setFindInfoWidget(self):
         longitudeLabel = QLabel()
