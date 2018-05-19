@@ -14,6 +14,7 @@ from PyQt5.QtGui import QIcon, QIntValidator, QDoubleValidator
 from PyQt5.QtCore import Qt, QUrl
 from drawThread import DrawThread
 
+
 class UI(QMainWindow):
     """docstring for UI"""
 
@@ -104,7 +105,6 @@ class UI(QMainWindow):
         self.findTopKButton.setText("查找top-k")
         self.findTopKButton.setEnabled(False)
         self.findTopKButton.clicked.connect(self.findTopK)
-
 
         self.longitudeEdit.setStatusTip("经度取值范围: -180.00-180.00")
         self.latitudeEdit.setStatusTip("纬度取值范围: -180.00-180.00")
@@ -200,12 +200,13 @@ class UI(QMainWindow):
 
         self.t = DrawThread(target=drawTopKMap,
                             args=(
-                                  self.csv_file,
-                                  self.longitude,
-                                  self.latitude,
-                                  k,
-                                  keyword,
-                                  'html/topKMap.html', 'topK点图'))
+                                self.csv_file,
+                                self.longitude,
+                                self.latitude,
+                                k,
+                                keyword,
+                                self.data,
+                                'html/topKMap.html', 'topK点图'))
         self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/topKMap.html'))
         self.t.start()
 
@@ -215,7 +216,6 @@ class UI(QMainWindow):
             self.extensionButton.setText("<<")
         else:
             self.extensionButton.setText(">>")
-
 
     # 设置基本按钮， 后续可能要重写
     def setShowButton(self):
@@ -269,7 +269,6 @@ class UI(QMainWindow):
         self.mainLayout.addWidget(self.extensionButton, 1, 1, 1, 1.1)
         self.mainLayout.addWidget(self.extensionWidget, 2, 1, 7, 2)
         self.mainLayout.setSizeConstraint(QLayout.SetFixedSize)
-
 
     # 加载html
     def showInWebEngineView(self, fileName):
@@ -327,7 +326,6 @@ class UI(QMainWindow):
             threading.Thread(target=self.openFile, args=(file, savePickle)).start()
             self.setWindowTitle(file)
 
-
     # 检查上次打开的这个csv文件修改时间和这次打开的这个csv文件的时间是否一致
     def checkFile(self, file, savePickle):
         savePickleChange = savePickle + 'change'
@@ -347,6 +345,9 @@ class UI(QMainWindow):
             # 该文件没有被修改过
             with open(savePickle, 'rb') as f:
                 self.csv_file = pickle.load(f)
+
+            with open(savePickle+'data', 'rb') as f:
+                self.data = pickle.load(f)
         else:
             # 该文件没有被打开过
             # 一是打开它
@@ -355,6 +356,13 @@ class UI(QMainWindow):
             self.csv_file = pd.read_csv(file)
             with open(savePickle, 'wb') as f:
                 pickle.dump(self.csv_file, f)
+
+            # self.data是每行整合成一行的列表
+            csv_file_tmp = self.csv_file.fillna("").astype(str)
+            self.data = [" ".join(list(csv_file_tmp.iloc[x])) for x in range(len(csv_file_tmp))]
+
+            with open(savePickle+'data', 'wb') as f:
+                pickle.dump(self.data, f)
 
             changeTime = time.localtime(os.stat(file).st_mtime)
             savePickleChange = savePickle + 'change'

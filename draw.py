@@ -10,7 +10,7 @@ import plotly.offline as py
 from plotly.graph_objs import *
 from PyQt5.QtCore import QUrl
 
-from findTopK import findTopK
+from findTopK import findTopK, findTopKWithKeyWord
 from findRange import findRange
 
 mapbox_access_token = 'pk.eyJ1Ijoic2RpdGUiLCJhIjoiY2pmajloaWJxMGw2NjJ4dW1za2c2cDNkZiJ9.KNk-JYP0chw-NFPffGs0eg'
@@ -139,11 +139,11 @@ def drawMap(csv_file, fileName="html/map.html", title=''):
     py.plot(fig, filename=fileName, auto_open=False)
 
 
-def drawTopKMap(csv_file, lon, lat, topK, keyWord, fileName="html/topKMap.html", title=''):
+def drawTopKMap(csv_file, lon, lat, topK, keyWord, data, fileName="html/topKMap.html", title=''):
     if keyWord == "":
         topKInfo = findTopK(csv_file, lon, lat, topK)
     else:
-        return
+        topKInfo = findTopKWithKeyWord(csv_file, lon, lat, topK, keyWord, data)
 
     topKInfo = topKInfo.fillna('Not set')  # 将空值设为Not set
     topKInfo['info'] = "Store Number: " + topKInfo["Store Number"] + "</br></br>" \
