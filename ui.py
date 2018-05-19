@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# __Author__: Sdite
+# __Author__: Sdite, amyy4, JX-Soleil, hzgege
 # __Email__ : a122691411@gmail.com
 
 import pickle
@@ -10,9 +10,10 @@ import pandas as pd
 from draw import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtWebEngineWidgets import QWebEngineView
-from PyQt5.QtGui import QIcon, QIntValidator
+from PyQt5.QtGui import QIcon, QIntValidator, QDoubleValidator
 from PyQt5.QtCore import Qt, QUrl
-from DrawThread import DrawThread
+from drawThread import DrawThread
+
 
 class UI(QMainWindow):
     """docstring for UI"""
@@ -32,15 +33,16 @@ class UI(QMainWindow):
         self.setWindowTitle('星巴克数据分析')
         self.setWindowIcon(QIcon('image/StarBucks.png'))
 
-        self.mainWidget = QWidget()          # 主窗体控件
-        self.mainLayout = QGridLayout()      # 主窗体layout
+        self.mainWidget = QWidget()  # 主窗体控件
+        self.mainLayout = QGridLayout()  # 主窗体layout
 
-        self.menuBar()              # 菜单栏
-        self.statusBar()            # 状态栏
-        self.setOpenFileMenu()      # 打开文件菜单
+        self.menuBar()  # 菜单栏
+        self.statusBar()  # 状态栏
+        self.setOpenFileMenu()  # 打开文件菜单
 
-        self.setButton()            # 设置按钮
-        self.setFindTopKWidget()
+        self.setShowButton()  # 设置显示统计图的按钮
+        self.setFindInfoWidget()
+
         self.setWebEngineView()
 
         self.mainWidget.setLayout(self.mainLayout)
@@ -52,74 +54,143 @@ class UI(QMainWindow):
 
     def setWebEngineView(self):
         self.webEngine = QWebEngineView(self)
-        self.mainLayout.addWidget(self.webEngine, 3, 1, 6, 6)
+        self.mainLayout.addWidget(self.webEngine, 1, 8, 8, 11)
+
+    def test(self):
+        QMessageBox.information(self, "Test", "content", QMessageBox.Ok)
 
     # top-k的输入框，按钮的控件
-    def setFindTopKWidget(self):
+    def setFindInfoWidget(self):
         longitudeLabel = QLabel()
         latitudeLabel = QLabel()
+        rangeLabel = QLabel()
         kLabel = QLabel()
+        keyWordLabel = QLabel()
 
         longitudeLabel.setText("经度: ")
         latitudeLabel.setText("纬度: ")
+        rangeLabel.setText("range:")
         kLabel.setText("k: ")
+        keyWordLabel.setText("关键词：")
 
         self.longitudeEdit = QLineEdit()
         self.latitudeEdit = QLineEdit()
+        self.rangeEdit = QLineEdit()
         self.kEdit = QLineEdit()
+        self.keyWordEdit = QLineEdit()
+
+        longitudeValidator = QDoubleValidator(self)
+        longitudeValidator.setRange(-180.00, 180.00)
+        longitudeValidator.setNotation(QDoubleValidator.StandardNotation)
+        longitudeValidator.setDecimals(2)
+        self.longitudeEdit.setValidator(longitudeValidator)
+
+        latitudeValidator = QDoubleValidator(self)
+        latitudeValidator.setRange(-90.00, 90.00)
+        latitudeValidator.setNotation(QDoubleValidator.StandardNotation)
+        latitudeValidator.setDecimals(2)
+        self.latitudeEdit.setValidator(latitudeValidator)
+
+        kIntValidator = QIntValidator(self)
+        kIntValidator.setRange(0, 25000)
+        self.rangeEdit.setPlaceholderText("单位: km")
+        self.rangeEdit.setValidator(kIntValidator)
+
+        self.findRangeButton = QPushButton()
+        self.findRangeButton.setText("查找range")
+        self.findRangeButton.setEnabled(False)
+        self.findRangeButton.clicked.connect(self.findRange)
 
         self.findTopKButton = QPushButton()
         self.findTopKButton.setText("查找top-k")
         self.findTopKButton.setEnabled(False)
-        self.findTopKButton.clicked.connect(self.findSlot)
+        self.findTopKButton.clicked.connect(self.findTopK)
 
-        hBox = QHBoxLayout(self)
-        hBox.addWidget(longitudeLabel)
-        hBox.addWidget(self.longitudeEdit, 0)
-        hBox.addWidget(latitudeLabel)
-        hBox.addWidget(self.latitudeEdit, 0)
-        hBox.addWidget(kLabel)
-        hBox.addWidget(self.kEdit, 0)
-        hBox.addWidget(self.findTopKButton, 0)
+        self.longitudeEdit.setStatusTip("经度取值范围: -180.00-180.00")
+        self.latitudeEdit.setStatusTip("纬度取值范围: -180.00-180.00")
+        self.rangeEdit.setStatusTip("半径取值: 0-25000")
+
+        vBox = QVBoxLayout(self)
+        vBox.addWidget(longitudeLabel)
+        vBox.addWidget(self.longitudeEdit, 0)
+        vBox.addWidget(latitudeLabel)
+        vBox.addWidget(self.latitudeEdit, 0)
+        vBox.addWidget(rangeLabel)
+        vBox.addWidget(self.rangeEdit, 0)
+        vBox.addWidget(kLabel)
+        vBox.addWidget(self.kEdit, 0)
+        vBox.addWidget(keyWordLabel)
+        vBox.addWidget(self.keyWordEdit, 0)
+        vBox.addWidget(self.findRangeButton, 0)
+        vBox.addWidget(self.findTopKButton, 0)
 
         self.longitudeEdit.setEnabled(False)
         self.latitudeEdit.setEnabled(False)
+        self.rangeEdit.setEnabled(False)
         self.kEdit.setEnabled(False)
+        self.keyWordEdit.setEnabled(False)
 
         hWidget = QWidget()
-        hWidget.setLayout(hBox)
-        self.mainLayout.addWidget(hWidget, 1, 1, 1, 6)
+        hWidget.setLayout(vBox)
+        self.mainLayout.addWidget(hWidget, 1, 3, 6, 5)
 
-    def findSlot(self):
-        longitude = self.longitudeEdit.text()
-        latitude = self.latitudeEdit.text()
-        k = self.kEdit.text()
-
-        if longitude == "":
+    def checkLongAndLat(self):
+        self.longitude = self.longitudeEdit.text()
+        self.latitude = self.latitudeEdit.text()
+        if self.longitude == "":
             QMessageBox.warning(self, "警告", "请输入经度", QMessageBox.Ok)
-            return
+            return False
 
         try:
-            longitude = float(longitude)
-            if longitude > 180 or longitude < -180:
+            self.longitude = float(self.longitude)
+            if self.longitude > 180 or self.longitude < -180:
                 QMessageBox.warning(self, "错误", "经度在-180~180之间", QMessageBox.Ok)
-                return
+                return False
         except:
             QMessageBox.warning(self, "错误", "请输入数字", QMessageBox.Ok)
-            return
+            return False
 
-        if latitude == "":
+        if self.latitude == "":
             QMessageBox.warning(self, "警告", "请输入纬度", QMessageBox.Ok)
-            return
+            return False
 
         try:
-            latitude = float(latitude)
-            if latitude > 90 or latitude < -90:
+            self.latitude = float(self.latitude)
+            if self.latitude > 90 or self.latitude < -90:
                 QMessageBox.warning(self, "错误", "纬度在-90~90之间", QMessageBox.Ok)
-                return
+                return False
         except:
             QMessageBox.warning(self, "错误", "请输入数字", QMessageBox.Ok)
+            return False
+        return True
+
+    def findRange(self):
+        if not self.checkLongAndLat():
             return
+
+        r = self.rangeEdit.text()
+
+        if r == "":
+            QMessageBox.warning(self, "警告", "请输入range值", QMessageBox.Ok)
+            return
+
+        r = int(r)
+
+        self.t = DrawThread(target=drawRangeMap,
+                            args=(self.csv_file,
+                                  self.longitude,
+                                  self.latitude,
+                                  r,
+                                  'html/RangeMap.html', '距离range图'))
+        self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/RangeMap.html'))
+        self.t.start()
+
+    def findTopK(self):
+        if not self.checkLongAndLat():
+            return
+
+        k = self.kEdit.text()
+        keyword = self.keyWordEdit.text()
 
         if k == "":
             QMessageBox.warning(self, "警告", "请输入k值", QMessageBox.Ok)
@@ -128,21 +199,28 @@ class UI(QMainWindow):
         k = int(k)
 
         self.t = DrawThread(target=drawTopKMap,
-                            args=(self.csv_file,
-                                  longitude,
-                                  latitude,
-                                  k,
-                                  'html/topKMap.html', 'topK点图'))
-        self.t.start()
+                            args=(
+                                self.csv_file,
+                                self.longitude,
+                                self.latitude,
+                                k,
+                                keyword,
+                                self.data,
+                                'html/topKMap.html', 'topK点图'))
         self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/topKMap.html'))
+        self.t.start()
 
+    def showExtension(self):
+        self.extensionWidget.setVisible(not self.extensionWidget.isVisible())
+        if self.extensionWidget.isVisible():
+            self.extensionButton.setText("<<")
+        else:
+            self.extensionButton.setText(">>")
 
     # 设置基本按钮， 后续可能要重写
-    def setButton(self):
+    def setShowButton(self):
         self.drawMapButton = QPushButton('世界分布图', self)
-
         self.drawColorMapButton = QPushButton('国家分布彩色图', self)
-
         self.countStoreByTimezoneButton_bar = QPushButton('时区店铺数量柱状图', self)
         self.countStoreByTimezoneButton_pie = QPushButton('时区店铺数量饼图', self)
         self.countStoreByCountryButton_bar = QPushButton('国家店铺数量柱状图', self)
@@ -170,44 +248,58 @@ class UI(QMainWindow):
             lambda: self.drawPie(self.csv_file['Country'],
                                  'html/countryPie.html', '国家店铺数量饼图'))
 
-        self.mainLayout.addWidget(self.drawMapButton, 2, 1)
-        self.mainLayout.addWidget(self.drawColorMapButton, 2, 2)
-        self.mainLayout.addWidget(self.countStoreByTimezoneButton_bar, 2, 3)
-        self.mainLayout.addWidget(self.countStoreByTimezoneButton_pie, 2, 4)
-        self.mainLayout.addWidget(self.countStoreByCountryButton_bar, 2, 5)
-        self.mainLayout.addWidget(self.countStoreByCountryButton_pie, 2, 6)
+        # 将旧的需求加入到扩展控件中
+        self.extensionWidget = QWidget()
+        vBox = QVBoxLayout(self)
+        vBox.addWidget(self.drawMapButton)
+        vBox.addWidget(self.drawColorMapButton)
+        vBox.addWidget(self.countStoreByTimezoneButton_bar)
+        vBox.addWidget(self.countStoreByTimezoneButton_pie)
+        vBox.addWidget(self.countStoreByCountryButton_bar)
+        vBox.addWidget(self.countStoreByCountryButton_pie)
+        self.extensionWidget.setLayout(vBox)
+        self.extensionWidget.hide()
+
+        # 控制显示和隐藏
+        self.extensionButton = QPushButton(">>", self)
+        self.extensionButton.setCheckable(True)
+        self.extensionButton.setAutoDefault(False)
+        self.extensionButton.toggled.connect(self.showExtension)
+
+        self.mainLayout.addWidget(self.extensionButton, 1, 1, 1, 1.1)
+        self.mainLayout.addWidget(self.extensionWidget, 2, 1, 7, 2)
+        self.mainLayout.setSizeConstraint(QLayout.SetFixedSize)
 
     # 加载html
     def showInWebEngineView(self, fileName):
         self.statusBar().showMessage(self.t.time)
         self.webEngine.load(QUrl.fromLocalFile(fileName))
 
-
     # 画时区店铺数量渐变彩色点
     def drawMap(self):
         self.t = DrawThread(drawMap, (self.csv_file, 'html/map.html', '不同时区店铺数量渐变图'))
+        self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/map.html'))
         self.t.start()
-        self.t.endTrigger.connect(lambda :self.showInWebEngineView('/html/map.html'))
 
     # 画国家分布彩色渐变图
     def drawColorMap(self):
         self.t = DrawThread(target=drawColorMaps,
-                         args=(self.csv_file['Country'],
-                               'html/colorMap.html', '国家分布彩色图'))
-        self.t.start()
+                            args=(self.csv_file['Country'],
+                                  'html/colorMap.html', '国家分布彩色图'))
         self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/colorMap.html'))
+        self.t.start()
 
     # 画柱状图
     def drawBar(self, data, fileName='html/bar.html', title=''):
         self.t = DrawThread(target=drawBar, args=(data, fileName, title))
+        self.t.endTrigger.connect(lambda: self.showInWebEngineView('/' + fileName))
         self.t.start()
-        self.t.endTrigger.connect(lambda: self.showInWebEngineView('/'+fileName))
 
     # 画饼图
     def drawPie(self, data, fileName='html/pie.hmtl', title=''):
         self.t = DrawThread(target=drawPie, args=(data, fileName, title))
-        self.t.start()
         self.t.endTrigger.connect(lambda: self.showInWebEngineView('/' + fileName))
+        self.t.start()
 
     # 设置打开文件的功能
     def setOpenFileMenu(self):
@@ -215,7 +307,7 @@ class UI(QMainWindow):
         fileMenu = menuBar.addMenu('File')
 
         openFile = QAction(QIcon('image/open.png'), 'open file', self)
-        openFile.setShortcut('Ctrl + O')
+        openFile.setShortcut('Ctrl+O')
         openFile.setStatusTip('打开文件')
         openFile.triggered.connect(self.showFileDialog)
 
@@ -253,6 +345,9 @@ class UI(QMainWindow):
             # 该文件没有被修改过
             with open(savePickle, 'rb') as f:
                 self.csv_file = pickle.load(f)
+
+            with open(savePickle+'data', 'rb') as f:
+                self.data = pickle.load(f)
         else:
             # 该文件没有被打开过
             # 一是打开它
@@ -262,12 +357,19 @@ class UI(QMainWindow):
             with open(savePickle, 'wb') as f:
                 pickle.dump(self.csv_file, f)
 
+            # self.data是每行整合成一行的列表
+            csv_file_tmp = self.csv_file.fillna("").astype(str)
+            self.data = [" ".join(list(csv_file_tmp.iloc[x])) for x in range(len(csv_file_tmp))]
+
+            with open(savePickle+'data', 'wb') as f:
+                pickle.dump(self.data, f)
+
             changeTime = time.localtime(os.stat(file).st_mtime)
             savePickleChange = savePickle + 'change'
             with open(savePickleChange, 'wb') as f:
                 pickle.dump(changeTime, f)
 
-        self.csv_file.fillna(0)
+        # self.csv_file.fillna(0)
         self.drawMapButton.setEnabled(True)
         self.drawColorMapButton.setEnabled(True)
         self.countStoreByTimezoneButton_bar.setEnabled(True)
@@ -275,14 +377,18 @@ class UI(QMainWindow):
         self.countStoreByCountryButton_bar.setEnabled(True)
         self.countStoreByCountryButton_pie.setEnabled(True)
         self.findTopKButton.setEnabled(True)
+        self.findRangeButton.setEnabled(True)
 
         self.longitudeEdit.setEnabled(True)
         self.latitudeEdit.setEnabled(True)
         self.kEdit.setEnabled(True)
+        self.rangeEdit.setEnabled(True)
+        self.keyWordEdit.setEnabled(True)
 
         kIntValidator = QIntValidator(self)
         kIntValidator.setRange(0, len(self.csv_file))
-        self.kEdit.setPlaceholderText("输入0-"+str(len(self.csv_file))+"间的整数值")
+        self.kEdit.setPlaceholderText("0-" + str(len(self.csv_file)))
+        self.kEdit.setStatusTip("k值范围: 0-" + str(len(self.csv_file)))
         self.kEdit.setValidator(kIntValidator)
 
     # 窗口居中
