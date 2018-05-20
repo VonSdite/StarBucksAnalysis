@@ -48,9 +48,9 @@ class UI(QMainWindow):
 
         self.mainWidget.setLayout(self.mainLayout)
         self.setCentralWidget(self.mainWidget)
-        self.layout().setSizeConstraint(QLayout.SetFixedSize)   # 固定窗口的大小
+        # self.layout().setSizeConstraint(QLayout.SetFixedSize)   # 固定窗口的大小
 
-        # self.center()           # 居中窗口， 但固定窗口大小后失效
+        self.center()           # 居中窗口， 但固定窗口大小后失效
         self.show()
 
     def setWebEngineView(self):
@@ -225,6 +225,8 @@ class UI(QMainWindow):
             self.extensionButton.setText("<<")
         else:
             self.extensionButton.setText(">>")
+        self.adjustSize()
+
 
     # 设置基本按钮， 后续可能要重写
     def setShowButton(self):
@@ -276,8 +278,8 @@ class UI(QMainWindow):
         self.extensionButton.toggled.connect(self.showExtension)
 
         self.mainLayout.addWidget(self.extensionButton, 1, 3, 1, 1)
-        self.mainLayout.addWidget(self.extensionWidget, 1, 1, 10, 2)
-        self.mainLayout.setSizeConstraint(QLayout.SetFixedSize)
+        self.mainLayout.addWidget(self.extensionWidget, 1, 1, 10, 1)
+
 
     # 加载html
     def showInWebEngineView(self, fileName):
