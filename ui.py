@@ -11,15 +11,30 @@ from draw import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtGui import QIcon, QIntValidator, QDoubleValidator
-from PyQt5.QtCore import Qt, QUrl
+from PyQt5.QtCore import Qt, QUrl, QThread
 from drawThread import DrawThread
 
 
 class UI(QMainWindow):
     """docstring for UI"""
 
+    FINDTOPKWITHKEYWORD = 1
+    FINDTOPKWITHOUTKEYWORD = 2
+    FINDRANGE = 3
+
     def __init__(self):
         super(UI, self).__init__()
+
+        # 每种查询时延的列表
+        self.topKTimeWithoutKeyWord = []
+        self.topKTimeWithKeyWord = []
+        self.rangeTime = []
+
+        # 每种查询的k或r值
+        self.topKWithoutKeyWord = []
+        self.topKWithKeyWord = []
+        self.range = []
+
         self.initUI()
 
     def initUI(self):
@@ -39,6 +54,7 @@ class UI(QMainWindow):
         self.menuBar()  # 菜单栏
         self.statusBar()  # 状态栏
         self.setOpenFileMenu()  # 打开文件菜单
+        self.setShowQueryTimeMenu() # 显示时延菜单选项
 
         self.setShowButton()  # 设置显示统计图的按钮
         self.setFindInfoWidget()
@@ -48,16 +64,12 @@ class UI(QMainWindow):
         self.mainWidget.setLayout(self.mainLayout)
         self.setCentralWidget(self.mainWidget)
 
-        self.adjustSize()
-        self.center()  # 将窗口居中
+        self.center()           # 居中窗口， 但固定窗口大小后失效
         self.show()
 
     def setWebEngineView(self):
         self.webEngine = QWebEngineView(self)
-        self.mainLayout.addWidget(self.webEngine, 1, 8, 8, 11)
-
-    def test(self):
-        QMessageBox.information(self, "Test", "content", QMessageBox.Ok)
+        self.mainLayout.addWidget(self.webEngine, 1, 8, 11, 15)
 
     # top-k的输入框，按钮的控件
     def setFindInfoWidget(self):
@@ -132,7 +144,7 @@ class UI(QMainWindow):
 
         hWidget = QWidget()
         hWidget.setLayout(vBox)
-        self.mainLayout.addWidget(hWidget, 1, 3, 6, 5)
+        self.mainLayout.addWidget(hWidget, 2, 3, 6, 4)
 
     def checkLongAndLat(self):
         self.longitude = self.longitudeEdit.text()
@@ -168,6 +180,7 @@ class UI(QMainWindow):
         if not self.checkLongAndLat():
             return
 
+
         r = self.rangeEdit.text()
 
         if r == "":
@@ -176,18 +189,26 @@ class UI(QMainWindow):
 
         r = int(r)
 
-        self.t = DrawThread(target=drawRangeMap,
-                            args=(self.csv_file,
-                                  self.longitude,
-                                  self.latitude,
-                                  r,
-                                  'html/RangeMap.html', '距离range图'))
-        self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/RangeMap.html'))
+        self.kEdit.clear()
+        self.keyWordEdit.clear()
+
+        self.loadUrl('/config/loadingHtml/loading.html')
+        self.t = DrawThread(
+            target=drawRangeMap,
+            args=(self.csv_file,
+                  self.longitude,
+                  self.latitude,
+                  r,
+                  'html/RangeMap.html', '距离range图'))
+        type = self.FINDRANGE
+        self.range.append(r)
+        self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/RangeMap.html', type))
         self.t.start()
 
     def findTopK(self):
         if not self.checkLongAndLat():
             return
+
 
         k = self.kEdit.text()
         keyword = self.keyWordEdit.text()
@@ -198,16 +219,28 @@ class UI(QMainWindow):
 
         k = int(k)
 
-        self.t = DrawThread(target=drawTopKMap,
-                            args=(
-                                self.csv_file,
-                                self.longitude,
-                                self.latitude,
-                                k,
-                                keyword,
-                                self.data,
-                                'html/topKMap.html', 'topK点图'))
-        self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/topKMap.html'))
+        self.rangeEdit.clear()
+
+        self.loadUrl('/config/loadingHtml/loading.html')
+        self.t = DrawThread(
+            target=drawTopKMap,
+            args=(
+                self.csv_file,
+                self.longitude,
+                self.latitude,
+                k,
+                keyword,
+                self.data,
+                'html/topKMap.html', 'topK点图'))
+
+        if keyword != "":
+            type = self.FINDTOPKWITHKEYWORD
+            self.topKWithKeyWord.append(k)
+        else:
+            type = self.FINDTOPKWITHOUTKEYWORD
+            self.topKWithoutKeyWord.append(k)
+
+        self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/topKMap.html', type))
         self.t.start()
 
     def showExtension(self):
@@ -216,6 +249,7 @@ class UI(QMainWindow):
             self.extensionButton.setText("<<")
         else:
             self.extensionButton.setText(">>")
+
 
     # 设置基本按钮， 后续可能要重写
     def setShowButton(self):
@@ -266,24 +300,37 @@ class UI(QMainWindow):
         self.extensionButton.setAutoDefault(False)
         self.extensionButton.toggled.connect(self.showExtension)
 
-        self.mainLayout.addWidget(self.extensionButton, 1, 1, 1, 1.1)
-        self.mainLayout.addWidget(self.extensionWidget, 2, 1, 7, 2)
-        self.mainLayout.setSizeConstraint(QLayout.SetFixedSize)
+        self.mainLayout.addWidget(self.extensionButton, 1, 3, 1, 1)
+        self.mainLayout.addWidget(self.extensionWidget, 1, 1, 7, 1)
+
 
     # 加载html
-    def showInWebEngineView(self, fileName):
+    def showInWebEngineView(self, fileName, type=None):
         self.statusBar().showMessage(self.t.time)
+        t = float(self.t.time.split(' ')[1][:-1])      # 去掉中文字符和单位s
+        if type == self.FINDRANGE:
+            self.rangeTime.append(t)
+        elif type == self.FINDTOPKWITHKEYWORD:
+            self.topKTimeWithKeyWord.append(t)
+        elif type == self.FINDTOPKWITHOUTKEYWORD:
+            self.topKTimeWithoutKeyWord.append(t)
+        self.loadUrl(fileName)
+
+    def loadUrl(self, fileName):
         self.webEngine.load(QUrl.fromLocalFile(fileName))
 
     # 画时区店铺数量渐变彩色点
     def drawMap(self):
+        self.loadUrl('/config/loadingHtml/loading.html')
         self.t = DrawThread(drawMap, (self.csv_file, 'html/map.html', '不同时区店铺数量渐变图'))
         self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/map.html'))
         self.t.start()
 
     # 画国家分布彩色渐变图
     def drawColorMap(self):
-        self.t = DrawThread(target=drawColorMaps,
+        self.loadUrl('/config/loadingHtml/loading.html')
+        self.t = DrawThread(
+                            target=drawColorMaps,
                             args=(self.csv_file['Country'],
                                   'html/colorMap.html', '国家分布彩色图'))
         self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/colorMap.html'))
@@ -291,15 +338,38 @@ class UI(QMainWindow):
 
     # 画柱状图
     def drawBar(self, data, fileName='html/bar.html', title=''):
+        self.loadUrl('/config/loadingHtml/loading.html')
         self.t = DrawThread(target=drawBar, args=(data, fileName, title))
         self.t.endTrigger.connect(lambda: self.showInWebEngineView('/' + fileName))
         self.t.start()
 
     # 画饼图
     def drawPie(self, data, fileName='html/pie.hmtl', title=''):
+        self.loadUrl('/config/loadingHtml/loading.html')
         self.t = DrawThread(target=drawPie, args=(data, fileName, title))
         self.t.endTrigger.connect(lambda: self.showInWebEngineView('/' + fileName))
         self.t.start()
+
+    def showTime(self):
+        data = [
+            (self.rangeTime, self.range, 'range查找'),
+            (self.topKTimeWithoutKeyWord, self.topKWithKeyWord, 'topK无关键字'),
+            (self.topKTimeWithKeyWord, self.topKWithKeyWord, 'topK有关键字')
+        ]
+        self.t = DrawThread(target=drawLineChart, args=(data, 'html/showTime.html'))
+        self.t.endTrigger.connect(lambda : self.showInWebEngineView('/html/showTime.html'))
+        self.t.start()
+
+    def setShowQueryTimeMenu(self):
+        menuBar = self.menuBar()
+        viewMenu = menuBar.addMenu('View')
+
+        showQueryTimeMenu = QAction(QIcon('image/time.png'), 'show time', self)
+        showQueryTimeMenu.setShortcut('Ctrl+1')
+        showQueryTimeMenu.setStatusTip('显示时延')
+        showQueryTimeMenu.triggered.connect(self.showTime)
+
+        viewMenu.addAction(showQueryTimeMenu)
 
     # 设置打开文件的功能
     def setOpenFileMenu(self):

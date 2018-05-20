@@ -9,7 +9,6 @@ from random import randint
 import plotly.offline as py
 from plotly.graph_objs import *
 from PyQt5.QtCore import QUrl
-
 from findTopK import findTopK, findTopKWithKeyWord
 from findRange import findRange
 
@@ -181,6 +180,10 @@ def drawTopKMap(csv_file, lon, lat, topK, keyWord, data, fileName="html/topKMap.
         hovermode='closest',
         mapbox=dict(
             accesstoken=mapbox_access_token,
+            center=dict(
+                lat=lat,
+                lon=lon
+            ),
             bearing=0,
             pitch=0, zoom=1),
     )
@@ -212,7 +215,7 @@ def drawRangeMap(csv_file, lon, lat, range, fileName="html/rangeMap.html", title
         text=rangeInfo['info'],
         textposition='top left',
         hoverinfo='text',
-        name="距离标记点 < range的点",
+        name="距离标记点 <= range的点",
     ))
 
     data.append(Scattermapbox(
@@ -233,6 +236,10 @@ def drawRangeMap(csv_file, lon, lat, range, fileName="html/rangeMap.html", title
         hovermode='closest',
         mapbox=dict(
             accesstoken=mapbox_access_token,
+            center=dict(
+                lat=lat,
+                lon=lon
+            ),
             bearing=0,
             pitch=0, zoom=1),
     )
@@ -240,6 +247,22 @@ def drawRangeMap(csv_file, lon, lat, range, fileName="html/rangeMap.html", title
     fig = dict(data=data, layout=layout)
     py.plot(fig, filename=fileName, auto_open=False)
 
-if __name__ == '__main__':
-    csv_file = pd.read_csv('directory.csv')
-    drawRangeMap(csv_file, 113, 23, 50)
+def drawLineChart(data, fileName='html/line.html'):
+    trace = []
+    for info in data:
+        t = Scatter(
+            y = info[0],    # info[0]时延耗时
+            x = info[1],    # k或r值大小
+            name=info[2],   # 哪种查询
+            mode='lines+markers',
+            showlegend=True
+        )
+        trace.append(t)
+
+    layout = dict(
+        title='时延图',
+        )
+    fig = dict(data=trace, layout=layout)
+
+    py.plot(fig, filename=fileName, auto_open=False)
+
