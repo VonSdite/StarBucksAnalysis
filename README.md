@@ -26,12 +26,73 @@
 ### 小组的计划
 
 #### 用户故事、排序、相关的估计
+- 用户故事及估算
+    + 在地图展示range-r店铺，并显示时延 -> (**3人/天, 3点**)
+    
+    ![用户故事](README_IMG/iter4_story1.png)
+    
+    + 设计关键词相关度算法 -> (**3人/天, 3点**)
+    
+    ![用户故事](README_IMG/iter4_story2.png)
+    
+    + 修改top-k查询界面以及接口设置 -> (**1人/天, 1点**)
+    
+    ![用户故事](README_IMG/iter4_story3.png)
+    
+    + 在地图展示符合关键词+top-k的店铺，并显示时延 -> (**1人/天, 1点**)
+    
+    ![用户故事](README_IMG/iter4_story4.png)
+    
 
 - 排序
     + **优先级1**： 在地图展示range-r店铺，并显示时延
     + **优先级2**： 设计关键词相关度算法
     + **优先级3**： 修改top-k查询界面以及接口设置
     + **优先级4**： 在地图展示符合关键词+top-k的店铺，并显示时延
+
+### 小组的速度
+
+- 第四次迭代所有用户故事均完成，开发速度为 3+3+1+1=**8点**
+- 第三次迭代所有用户故事均完成，开发速度为 1+3+7+1+7+3+2=**24点**
+- 第二次迭代开发速度为 **25点**
+- 小组的平均开发速度 **19点**
+
+#### 软件介绍
+
+- **软件主体窗口**
+
+    ![软件主体窗口](README_IMG/iter4_mainWindow.png)
+
+---
+
+- **菜单栏打开文件**
+    
+    + 用于打开csv文件
+
+    + 快捷键为Ctrl+O
+
+    ![菜单栏打开文件](README_IMG/iter4_openFile.png)
+
+---
+
+- **RANGE**
+    
+    + 用户输入经纬度，以及一个参数r
+
+    + 显示以此经纬度为圆心的，半径为r范围的星巴克
+
+    ![RANGE](README_IMG/iter4_range.png)
+
+---
+
+- **关键词+top-k**
+    
+    + 用户输入经纬度和一个参数k以及关键词key
+
+    + 显示相似度最高以及最近的k个商铺
+
+    ![关键词+top-k查询](README_IMG/iter4_keyTop-k.png)
+
 
 
 ## Iteration 3
@@ -69,31 +130,31 @@
 - 用户故事及估算
     + 统计每个时区的店铺数量 -> (**1人/天, 1点**)
 
-    ![用户故事](../README_IMG/iter3_story1.png)
+    ![用户故事](README_IMG/iter3_story1.png)
 
     + 渐变色标识每个时区的店铺数量 -> (**3人/天, 3点**)
 
-    ![用户故事](../README_IMG/iter3_story2.png)
+    ![用户故事](README_IMG/iter3_story2.png)
 
     + 距离top-k查询界面以及接口设置 -> (**1人/周, 7点**)
 
-    ![用户故事](../README_IMG/iter3_story3.png)
+    ![用户故事](README_IMG/iter3_story3.png)
 
     + 设计经纬度计算距离算法 -> (**1人/天, 1点**)
 
-    ![用户故事](../README_IMG/iter3_story4.png)
+    ![用户故事](README_IMG/iter3_story4.png)
 
     + 设计获取top-K的店铺信息算法 -> (**1人/周, 7点**)
     
-    ![用户故事](../README_IMG/iter3_story5.png)
+    ![用户故事](README_IMG/iter3_story5.png)
 
     + 在地图展示top-K店铺，并显示时延 -> (**3人/天, 3点**)
 
-    ![用户故事](../README_IMG/iter3_story6.png)
+    ![用户故事](README_IMG/iter3_story6.png)
 
     + 可视化展示随着k的增长查询时延的变化 -> (**2人/天，2点**)
 
-    ![用户故事](../README_IMG/iter3_story7.png)
+    ![用户故事](README_IMG/iter3_story7.png)
 
 - 排序
     + **优先级1**： 统计每个时区的店铺数量
