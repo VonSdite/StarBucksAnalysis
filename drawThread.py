@@ -10,7 +10,6 @@ class DrawThread(QThread):
 
     def __init__(self, target, args):
         super(DrawThread, self).__init__()
-
         self.fun = target
         self.args = args
 

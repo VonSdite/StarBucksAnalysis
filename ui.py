@@ -11,7 +11,7 @@ from draw import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtGui import QIcon, QIntValidator, QDoubleValidator
-from PyQt5.QtCore import Qt, QUrl
+from PyQt5.QtCore import Qt, QUrl, QThread
 from drawThread import DrawThread
 
 
@@ -20,6 +20,7 @@ class UI(QMainWindow):
 
     def __init__(self):
         super(UI, self).__init__()
+
         self.initUI()
 
     def initUI(self):
@@ -47,14 +48,14 @@ class UI(QMainWindow):
 
         self.mainWidget.setLayout(self.mainLayout)
         self.setCentralWidget(self.mainWidget)
+        self.layout().setSizeConstraint(QLayout.SetFixedSize)   # 固定窗口的大小
 
-        self.adjustSize()
-        self.center()  # 将窗口居中
+        # self.center()           # 居中窗口， 但固定窗口大小后失效
         self.show()
 
     def setWebEngineView(self):
         self.webEngine = QWebEngineView(self)
-        self.mainLayout.addWidget(self.webEngine, 1, 8, 8, 11)
+        self.mainLayout.addWidget(self.webEngine, 1, 8, 11, 15)
 
     # top-k的输入框，按钮的控件
     def setFindInfoWidget(self):
@@ -129,7 +130,7 @@ class UI(QMainWindow):
 
         hWidget = QWidget()
         hWidget.setLayout(vBox)
-        self.mainLayout.addWidget(hWidget, 1, 3, 6, 5)
+        self.mainLayout.addWidget(hWidget, 2, 3, 6, 5)
 
     def checkLongAndLat(self):
         self.longitude = self.longitudeEdit.text()
@@ -165,6 +166,7 @@ class UI(QMainWindow):
         if not self.checkLongAndLat():
             return
 
+
         r = self.rangeEdit.text()
 
         if r == "":
@@ -173,18 +175,24 @@ class UI(QMainWindow):
 
         r = int(r)
 
-        self.t = DrawThread(target=drawRangeMap,
-                            args=(self.csv_file,
-                                  self.longitude,
-                                  self.latitude,
-                                  r,
-                                  'html/RangeMap.html', '距离range图'))
+        self.kEdit.clear()
+        self.keyWordEdit.clear()
+
+        self.loadUrl('/config/loadingHtml/loading.html')
+        self.t = DrawThread(
+            target=drawRangeMap,
+            args=(self.csv_file,
+                  self.longitude,
+                  self.latitude,
+                  r,
+                  'html/RangeMap.html', '距离range图'))
         self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/RangeMap.html'))
         self.t.start()
 
     def findTopK(self):
         if not self.checkLongAndLat():
             return
+
 
         k = self.kEdit.text()
         keyword = self.keyWordEdit.text()
@@ -195,15 +203,19 @@ class UI(QMainWindow):
 
         k = int(k)
 
-        self.t = DrawThread(target=drawTopKMap,
-                            args=(
-                                self.csv_file,
-                                self.longitude,
-                                self.latitude,
-                                k,
-                                keyword,
-                                self.data,
-                                'html/topKMap.html', 'topK点图'))
+        self.rangeEdit.clear()
+
+        self.loadUrl('/config/loadingHtml/loading.html')
+        self.t = DrawThread(
+            target=drawTopKMap,
+            args=(
+                self.csv_file,
+                self.longitude,
+                self.latitude,
+                k,
+                keyword,
+                self.data,
+                'html/topKMap.html', 'topK点图'))
         self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/topKMap.html'))
         self.t.start()
 
@@ -263,24 +275,30 @@ class UI(QMainWindow):
         self.extensionButton.setAutoDefault(False)
         self.extensionButton.toggled.connect(self.showExtension)
 
-        self.mainLayout.addWidget(self.extensionButton, 1, 1, 1, 1.1)
-        self.mainLayout.addWidget(self.extensionWidget, 2, 1, 7, 2)
+        self.mainLayout.addWidget(self.extensionButton, 1, 3, 1, 1)
+        self.mainLayout.addWidget(self.extensionWidget, 1, 1, 10, 2)
         self.mainLayout.setSizeConstraint(QLayout.SetFixedSize)
 
     # 加载html
     def showInWebEngineView(self, fileName):
         self.statusBar().showMessage(self.t.time)
+        self.loadUrl(fileName)
+
+    def loadUrl(self, fileName):
         self.webEngine.load(QUrl.fromLocalFile(fileName))
 
     # 画时区店铺数量渐变彩色点
     def drawMap(self):
+        self.loadUrl('/config/loadingHtml/loading.html')
         self.t = DrawThread(drawMap, (self.csv_file, 'html/map.html', '不同时区店铺数量渐变图'))
         self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/map.html'))
         self.t.start()
 
     # 画国家分布彩色渐变图
     def drawColorMap(self):
-        self.t = DrawThread(target=drawColorMaps,
+        self.loadUrl('/config/loadingHtml/loading.html')
+        self.t = DrawThread(
+                            target=drawColorMaps,
                             args=(self.csv_file['Country'],
                                   'html/colorMap.html', '国家分布彩色图'))
         self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/colorMap.html'))
@@ -288,12 +306,14 @@ class UI(QMainWindow):
 
     # 画柱状图
     def drawBar(self, data, fileName='html/bar.html', title=''):
+        self.loadUrl('/config/loadingHtml/loading.html')
         self.t = DrawThread(target=drawBar, args=(data, fileName, title))
         self.t.endTrigger.connect(lambda: self.showInWebEngineView('/' + fileName))
         self.t.start()
 
     # 画饼图
     def drawPie(self, data, fileName='html/pie.hmtl', title=''):
+        self.loadUrl('/config/loadingHtml/loading.html')
         self.t = DrawThread(target=drawPie, args=(data, fileName, title))
         self.t.endTrigger.connect(lambda: self.showInWebEngineView('/' + fileName))
         self.t.start()
