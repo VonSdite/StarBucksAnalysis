@@ -246,3 +246,23 @@ def drawRangeMap(csv_file, lon, lat, range, fileName="html/rangeMap.html", title
 
     fig = dict(data=data, layout=layout)
     py.plot(fig, filename=fileName, auto_open=False)
+
+def drawLineChart(data, fileName='html/line.html'):
+    trace = []
+    for info in data:
+        t = Scatter(
+            y = info[0],
+            x = list(range(1, len(info[0])+1)),
+            name=info[1],
+            mode='lines+markers',
+            showlegend=True
+        )
+        trace.append(t)
+
+    layout = dict(
+        title='时延图',
+        )
+    fig = dict(data=trace, layout=layout)
+
+    py.plot(fig, filename=fileName, auto_open=False)
+

@@ -18,9 +18,15 @@ from drawThread import DrawThread
 class UI(QMainWindow):
     """docstring for UI"""
 
+    FINDTOPKWITHKEYWORD = 1
+    FINDTOPKWITHOUTKEYWORD = 2
+    FINDRANGE = 3
+
     def __init__(self):
         super(UI, self).__init__()
-
+        self.topKTimeWithoutKeyWord = []
+        self.topKTimeWithKeyWord = []
+        self.rangeTime = []
         self.initUI()
 
     def initUI(self):
@@ -40,6 +46,7 @@ class UI(QMainWindow):
         self.menuBar()  # 菜单栏
         self.statusBar()  # 状态栏
         self.setOpenFileMenu()  # 打开文件菜单
+        self.setShowQueryTimeMenu() # 显示时延菜单选项
 
         self.setShowButton()  # 设置显示统计图的按钮
         self.setFindInfoWidget()
@@ -185,7 +192,8 @@ class UI(QMainWindow):
                   self.latitude,
                   r,
                   'html/RangeMap.html', '距离range图'))
-        self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/RangeMap.html'))
+        type = self.FINDRANGE
+        self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/RangeMap.html', type))
         self.t.start()
 
     def findTopK(self):
@@ -215,7 +223,11 @@ class UI(QMainWindow):
                 keyword,
                 self.data,
                 'html/topKMap.html', 'topK点图'))
-        self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/topKMap.html'))
+        if keyword != "":
+            type = self.FINDTOPKWITHKEYWORD
+        else:
+            type = self.FINDTOPKWITHOUTKEYWORD
+        self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/topKMap.html', type))
         self.t.start()
 
     def showExtension(self):
@@ -280,8 +292,15 @@ class UI(QMainWindow):
 
 
     # 加载html
-    def showInWebEngineView(self, fileName):
+    def showInWebEngineView(self, fileName, type=None):
         self.statusBar().showMessage(self.t.time)
+        t = float(self.t.time.split(' ')[1][:-1])      # 去掉中文字符和单位s
+        if type == self.FINDRANGE:
+            self.rangeTime.append(t)
+        elif type == self.FINDTOPKWITHKEYWORD:
+            self.topKTimeWithKeyWord.append(t)
+        elif type == self.FINDTOPKWITHOUTKEYWORD:
+            self.topKTimeWithoutKeyWord.append(t)
         self.loadUrl(fileName)
 
     def loadUrl(self, fileName):
@@ -317,6 +336,27 @@ class UI(QMainWindow):
         self.t = DrawThread(target=drawPie, args=(data, fileName, title))
         self.t.endTrigger.connect(lambda: self.showInWebEngineView('/' + fileName))
         self.t.start()
+
+    def showTime(self):
+        data = [
+            (self.rangeTime, 'range查找'),
+            (self.topKTimeWithoutKeyWord, 'topK无关键字'),
+            (self.topKTimeWithKeyWord, 'topK有关键字')
+        ]
+        self.t = DrawThread(target=drawLineChart, args=(data, 'html/showTime.html'))
+        self.t.endTrigger.connect(lambda : self.showInWebEngineView('/html/showTime.html'))
+        self.t.start()
+
+    def setShowQueryTimeMenu(self):
+        menuBar = self.menuBar()
+        viewMenu = menuBar.addMenu('View')
+
+        showQueryTimeMenu = QAction(QIcon('image/time.png'), 'show time', self)
+        showQueryTimeMenu.setShortcut('Ctrl+1')
+        showQueryTimeMenu.setStatusTip('显示时延')
+        showQueryTimeMenu.triggered.connect(self.showTime)
+
+        viewMenu.addAction(showQueryTimeMenu)
 
     # 设置打开文件的功能
     def setOpenFileMenu(self):

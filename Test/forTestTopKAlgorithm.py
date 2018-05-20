@@ -164,4 +164,4 @@ if __name__ == '__main__':
     )
     data = [trace1, trace2, trace3, trace4, trace5, trace6]
 
-    py.plot(data, filename='/时间比较.html')
+    py.plot(data, filename='../html/时间比较.html')
