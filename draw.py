@@ -9,7 +9,6 @@ from random import randint
 import plotly.offline as py
 from plotly.graph_objs import *
 from PyQt5.QtCore import QUrl
-
 from findTopK import findTopK, findTopKWithKeyWord
 from findRange import findRange
 
@@ -181,6 +180,10 @@ def drawTopKMap(csv_file, lon, lat, topK, keyWord, data, fileName="html/topKMap.
         hovermode='closest',
         mapbox=dict(
             accesstoken=mapbox_access_token,
+            center=dict(
+                lat=lat,
+                lon=lon
+            ),
             bearing=0,
             pitch=0, zoom=1),
     )
@@ -233,6 +236,10 @@ def drawRangeMap(csv_file, lon, lat, range, fileName="html/rangeMap.html", title
         hovermode='closest',
         mapbox=dict(
             accesstoken=mapbox_access_token,
+            center=dict(
+                lat=lat,
+                lon=lon
+            ),
             bearing=0,
             pitch=0, zoom=1),
     )
