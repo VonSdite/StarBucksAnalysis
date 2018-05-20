@@ -24,9 +24,17 @@ class UI(QMainWindow):
 
     def __init__(self):
         super(UI, self).__init__()
+
+        # 每种查询时延的列表
         self.topKTimeWithoutKeyWord = []
         self.topKTimeWithKeyWord = []
         self.rangeTime = []
+
+        # 每种查询的k或r值
+        self.topKWithoutKeyWord = []
+        self.topKWithKeyWord = []
+        self.range = []
+
         self.initUI()
 
     def initUI(self):
@@ -193,6 +201,7 @@ class UI(QMainWindow):
                   r,
                   'html/RangeMap.html', '距离range图'))
         type = self.FINDRANGE
+        self.range.append(r)
         self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/RangeMap.html', type))
         self.t.start()
 
@@ -223,10 +232,14 @@ class UI(QMainWindow):
                 keyword,
                 self.data,
                 'html/topKMap.html', 'topK点图'))
+
         if keyword != "":
             type = self.FINDTOPKWITHKEYWORD
+            self.topKWithKeyWord.append(k)
         else:
             type = self.FINDTOPKWITHOUTKEYWORD
+            self.topKWithoutKeyWord.append(k)
+
         self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/topKMap.html', type))
         self.t.start()
 
@@ -339,9 +352,9 @@ class UI(QMainWindow):
 
     def showTime(self):
         data = [
-            (self.rangeTime, 'range查找'),
-            (self.topKTimeWithoutKeyWord, 'topK无关键字'),
-            (self.topKTimeWithKeyWord, 'topK有关键字')
+            (self.rangeTime, self.range, 'range查找'),
+            (self.topKTimeWithoutKeyWord, self.topKWithKeyWord, 'topK无关键字'),
+            (self.topKTimeWithKeyWord, self.topKWithKeyWord, 'topK有关键字')
         ]
         self.t = DrawThread(target=drawLineChart, args=(data, 'html/showTime.html'))
         self.t.endTrigger.connect(lambda : self.showInWebEngineView('/html/showTime.html'))

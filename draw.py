@@ -215,7 +215,7 @@ def drawRangeMap(csv_file, lon, lat, range, fileName="html/rangeMap.html", title
         text=rangeInfo['info'],
         textposition='top left',
         hoverinfo='text',
-        name="距离标记点 < range的点",
+        name="距离标记点 <= range的点",
     ))
 
     data.append(Scattermapbox(
@@ -251,9 +251,9 @@ def drawLineChart(data, fileName='html/line.html'):
     trace = []
     for info in data:
         t = Scatter(
-            y = info[0],
-            x = list(range(1, len(info[0])+1)),
-            name=info[1],
+            y = info[0],    # info[0]时延耗时
+            x = info[1],    # k或r值大小
+            name=info[2],   # 哪种查询
             mode='lines+markers',
             showlegend=True
         )
