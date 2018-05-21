@@ -353,7 +353,7 @@ class UI(QMainWindow):
     def showTime(self):
         data = [
             (self.rangeTime, self.range, 'range查找'),
-            (self.topKTimeWithoutKeyWord, self.topKWithKeyWord, 'topK无关键字'),
+            (self.topKTimeWithoutKeyWord, self.topKWithoutKeyWord, 'topK无关键字'),
             (self.topKTimeWithKeyWord, self.topKWithKeyWord, 'topK有关键字')
         ]
         self.t = DrawThread(target=drawLineChart, args=(data, 'html/showTime.html'))
