@@ -67,6 +67,7 @@ class UI(QMainWindow):
         self.setCentralWidget(self.mainWidget)
 
         self.center()  # 居中窗口， 但固定窗口大小后失效
+
         self.show()
 
     def setWebEngineView(self):
@@ -423,6 +424,10 @@ class UI(QMainWindow):
             # 二是保存该文件的csv类型， 提高下次打开效率
             # 三是保存该文件的最后修改时间，用于下次打开时判断是否被修改过
             self.csv_file = pd.read_csv(file)
+            self.csv_file['AvgScore'] = 0
+            self.csv_file['Score'] = ""
+            self.csv_file['Id'] = list(range(len(self.csv_file)))
+
             with open(savePickle, 'wb') as f:
                 pickle.dump(self.csv_file, f)
 
@@ -439,7 +444,6 @@ class UI(QMainWindow):
             with open(savePickleChange, 'wb') as f:
                 pickle.dump(changeTime, f)
 
-        # self.csv_file.fillna(0)
         self.drawMapButton.setEnabled(True)
         self.drawColorMapButton.setEnabled(True)
         self.countStoreByTimezoneButton_bar.setEnabled(True)

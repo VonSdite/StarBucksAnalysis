@@ -7,6 +7,7 @@ plotlyJsFilePath = './plotly.js'
 def plot(data, layout, fileName='html/plot.html'):
     # 画图模板字符串
     template = '''
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8" />
@@ -23,7 +24,24 @@ def plot(data, layout, fileName='html/plot.html'):
 '''.format(layout=layout) \
                + '''    window.PLOTLYENV = window.PLOTLYENV || {};
     window.PLOTLYENV.BASE_URL = "https://plot.ly";
-    Plotly.newPlot("chartId", data, layout, { "showLink": false, "linkText": "Export to plot.ly" })
+    Plotly.newPlot("chartId", data, layout, { "showLink": false, "linkText": "Export to plot.ly" });
+    var myPlot = document.getElementById('chartId');
+    myPlot.on('plotly_click', function(d){
+            var point = d.points[0];
+
+            if (point.text.substr(0, 3) == '标记点') return;
+            var str = point.text.replace(new RegExp('</br></br>|</br>', 'gm'), '\\n'),
+                score = prompt(str + '\\n评分: ');
+            if (score > 10 || score < 0)
+            {
+                alert('请输入评分在0-10分间')
+            }
+            else if (score <= 10 && score >= 0 && score != null && score != "")
+            {
+                alert('评分成功!')
+            }
+        }
+    );
     </script>
     <script type="text/javascript">
     window.addEventListener("resize", function() { Plotly.Plots.resize(document.getElementById("chartId")); });

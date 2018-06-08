@@ -115,7 +115,7 @@ def drawMap(csv_file, fileName="html/map.html", title=''):
                        + "Postcode: " + csv_file["Postcode"] + "</br>" \
                        + "Phone Number: " + csv_file["Phone Number"] + "</br>" \
                        + "Timezone:" + csv_file['Timezone'] + "</br>" \
-                       + "count:" + csv_file['TimeZoneCount'].map(int64ToStr)
+                       + "Number of stores:" + csv_file['TimeZoneCount'].map(int64ToStr)
 
     data = [
         dict(
