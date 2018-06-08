@@ -10,9 +10,11 @@ import pandas as pd
 from draw import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtWebEngineWidgets import QWebEngineView
+from PyQt5.QtWebChannel import *
 from PyQt5.QtGui import QIcon, QIntValidator, QDoubleValidator
 from PyQt5.QtCore import Qt, QUrl, QThread
 from drawThread import DrawThread
+from TInteractObject import TInteractObj
 
 
 class UI(QMainWindow):
@@ -72,7 +74,18 @@ class UI(QMainWindow):
 
     def setWebEngineView(self):
         self.webEngine = QWebEngineView(self)
+
+        self.pWebChannel = QWebChannel(self.webEngine.page())
+        self.pInteractObj = TInteractObj(self)
+        self.pWebChannel.registerObject('interactObj', self.pInteractObj)
+        self.webEngine.page().setWebChannel(self.pWebChannel)
+        self.pInteractObj.sigReceivedMessFromJS.connect(self.onReceiveMessageFromJS)
+
         self.mainLayout.addWidget(self.webEngine, 1, 8, 11, 15)
+
+    def onReceiveMessageFromJS(self, strParameter):
+        print('OnReceiveMessageFromJS(%s)' % strParameter)
+
 
     # top-k的输入框，按钮的控件
     def setFindInfoWidget(self):
@@ -317,7 +330,7 @@ class UI(QMainWindow):
         self.loadUrl(fileName)
 
     def loadUrl(self, fileName):
-        self.webEngine.load(QUrl.fromLocalFile(fileName))
+        self.webEngine.page().load(QUrl.fromLocalFile(fileName))
 
     # 画时区店铺数量渐变彩色点
     def drawMap(self):

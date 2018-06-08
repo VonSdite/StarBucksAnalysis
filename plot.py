@@ -2,8 +2,6 @@
 # __Author__: Sdite
 # __Email__ : a122691411@gmail.com
 
-plotlyJsFilePath = './plotly.js'
-
 def plot(data, layout, fileName='html/plot.html'):
     # 画图模板字符串
     template = '''
@@ -13,10 +11,18 @@ def plot(data, layout, fileName='html/plot.html'):
     <meta charset="utf-8" />
 </head>
 <body>
-    <script src="{plotlyJsFilePath}"></script>
-'''.format(plotlyJsFilePath=plotlyJsFilePath) \
-               + '''    <div id="chartId" style="height: 100%; width: 100%;" class="plotly-graph-div"></div>
+    <script type="text/javascript" src="../config/qwebchannel.js"></script>  
+    <script src="../config/plotly.js"></script>
+    <div id="chartId" style="height: 100%; width: 100%;" class="plotly-graph-div"></div>
     <script type="text/javascript">
+    window.onload = function()
+     {
+        new QWebChannel(qt.webChannelTransport, function(channel)
+        {
+            //Get Qt interact object
+            var interactObj = channel.objects.interactObj;
+        });
+    };
 ''' \
                + '''    var data = {data},
 '''.format(data=data) \
@@ -28,7 +34,7 @@ def plot(data, layout, fileName='html/plot.html'):
     var myPlot = document.getElementById('chartId');
     myPlot.on('plotly_click', function(d){
             var point = d.points[0];
-
+            if(point.text.substr(0, 13) != 'Store Number:') return;
             if (point.text.substr(0, 3) == '标记点') return;
             var str = point.text.replace(new RegExp('</br></br>|</br>', 'gm'), '\\n'),
                 score = prompt(str + '\\n评分: ');
@@ -38,10 +44,17 @@ def plot(data, layout, fileName='html/plot.html'):
             }
             else if (score <= 10 && score >= 0 && score != null && score != "")
             {
-                alert('评分成功!')
+                new QWebChannel(qt.webChannelTransport, function(channel)
+                {
+                    //Get Qt interact object
+                    var interactObj = channel.objects.interactObj;
+                    interactObj.JSSendMessage(score);
+                });
+                alert('评分成功!');
             }
         }
     );
+    
     </script>
     <script type="text/javascript">
     window.addEventListener("resize", function() { Plotly.Plots.resize(document.getElementById("chartId")); });
