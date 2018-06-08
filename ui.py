@@ -18,6 +18,8 @@ from drawThread import DrawThread
 class UI(QMainWindow):
     """docstring for UI"""
 
+    # 以下三个常量是用于分别标记查询的类型
+    # 以便确定查询的类型来保存相应查询的时间
     FINDTOPKWITHKEYWORD = 1
     FINDTOPKWITHOUTKEYWORD = 2
     FINDRANGE = 3
@@ -54,7 +56,7 @@ class UI(QMainWindow):
         self.menuBar()  # 菜单栏
         self.statusBar()  # 状态栏
         self.setOpenFileMenu()  # 打开文件菜单
-        self.setShowQueryTimeMenu() # 显示时延菜单选项
+        self.setShowQueryTimeMenu()  # 显示时延菜单选项
 
         self.setShowButton()  # 设置显示统计图的按钮
         self.setFindInfoWidget()
@@ -64,7 +66,7 @@ class UI(QMainWindow):
         self.mainWidget.setLayout(self.mainLayout)
         self.setCentralWidget(self.mainWidget)
 
-        self.center()           # 居中窗口， 但固定窗口大小后失效
+        self.center()  # 居中窗口， 但固定窗口大小后失效
         self.show()
 
     def setWebEngineView(self):
@@ -180,7 +182,6 @@ class UI(QMainWindow):
         if not self.checkLongAndLat():
             return
 
-
         r = self.rangeEdit.text()
 
         if r == "":
@@ -199,16 +200,16 @@ class UI(QMainWindow):
                   self.longitude,
                   self.latitude,
                   r,
-                  'html/RangeMap.html', '距离range图'))
+                  'html/rangeMap.html', '距离range图'))
         type = self.FINDRANGE
         self.range.append(r)
-        self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/RangeMap.html', type))
+        self.t.endTrigger.connect(
+            lambda: self.showInWebEngineView('/html/rangeMap.html', type))
         self.t.start()
 
     def findTopK(self):
         if not self.checkLongAndLat():
             return
-
 
         k = self.kEdit.text()
         keyword = self.keyWordEdit.text()
@@ -249,7 +250,6 @@ class UI(QMainWindow):
             self.extensionButton.setText("<<")
         else:
             self.extensionButton.setText(">>")
-
 
     # 设置基本按钮， 后续可能要重写
     def setShowButton(self):
@@ -303,11 +303,10 @@ class UI(QMainWindow):
         self.mainLayout.addWidget(self.extensionButton, 1, 3, 1, 1)
         self.mainLayout.addWidget(self.extensionWidget, 1, 1, 7, 1)
 
-
     # 加载html
     def showInWebEngineView(self, fileName, type=None):
         self.statusBar().showMessage(self.t.time)
-        t = float(self.t.time.split(' ')[1][:-1])      # 去掉中文字符和单位s
+        t = float(self.t.time.split(' ')[1][:-1])  # 去掉中文字符和单位s
         if type == self.FINDRANGE:
             self.rangeTime.append(t)
         elif type == self.FINDTOPKWITHKEYWORD:
@@ -330,9 +329,9 @@ class UI(QMainWindow):
     def drawColorMap(self):
         self.loadUrl('/config/loadingHtml/loading.html')
         self.t = DrawThread(
-                            target=drawColorMaps,
-                            args=(self.csv_file['Country'],
-                                  'html/colorMap.html', '国家分布彩色图'))
+            target=drawColorMaps,
+            args=(self.csv_file['Country'],
+                  'html/colorMap.html', '国家分布彩色图'))
         self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/colorMap.html'))
         self.t.start()
 
@@ -357,7 +356,7 @@ class UI(QMainWindow):
             (self.topKTimeWithKeyWord, self.topKWithKeyWord, 'topK有关键字')
         ]
         self.t = DrawThread(target=drawLineChart, args=(data, 'html/showTime.html'))
-        self.t.endTrigger.connect(lambda : self.showInWebEngineView('/html/showTime.html'))
+        self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/showTime.html'))
         self.t.start()
 
     def setShowQueryTimeMenu(self):
@@ -416,7 +415,7 @@ class UI(QMainWindow):
             with open(savePickle, 'rb') as f:
                 self.csv_file = pickle.load(f)
 
-            with open(savePickle+'data', 'rb') as f:
+            with open(savePickle + 'data', 'rb') as f:
                 self.data = pickle.load(f)
         else:
             # 该文件没有被打开过
@@ -429,9 +428,10 @@ class UI(QMainWindow):
 
             # self.data是每行整合成一行的列表
             csv_file_tmp = self.csv_file.fillna("").astype(str)
-            self.data = [" ".join(list(csv_file_tmp.iloc[x])) for x in range(len(csv_file_tmp))]
+            self.data = [" ".join(list(csv_file_tmp.iloc[x])) for x in
+                         range(len(csv_file_tmp))]
 
-            with open(savePickle+'data', 'wb') as f:
+            with open(savePickle + 'data', 'wb') as f:
                 pickle.dump(self.data, f)
 
             changeTime = time.localtime(os.stat(file).st_mtime)
