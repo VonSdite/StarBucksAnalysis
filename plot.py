@@ -2,7 +2,7 @@
 # __Author__: Sdite
 # __Email__ : a122691411@gmail.com
 
-def plot(data, layout, identify=[], fileName='html/plot.html'):
+def plot(data, layout, identify=[], score=[], fileName='html/plot.html'):
     # 画图模板字符串
     template = '''
 <html>
@@ -17,39 +17,54 @@ def plot(data, layout, identify=[], fileName='html/plot.html'):
 ''' \
                + '''    var data = {data},
     identify = {id},
-'''.format(data=data, id=identify) \
-               + '''    layout = {layout};
-'''.format(layout=layout) \
+    scoreArr = {score},
+    layout = {layout};
+'''.format(data=data, id=identify, score=score, layout=layout) \
                + '''    window.PLOTLYENV = window.PLOTLYENV || {};
     window.PLOTLYENV.BASE_URL = "https://plot.ly";
-    Plotly.newPlot("chartId", data, layout, { "showLink": false, "linkText": "Export to plot.ly" });
-    if (data[0].type == 'scattermapbox')
-    {
-        var myPlot = document.getElementById('chartId');
-        myPlot.on('plotly_click', function(d){
-                var point = d.points[0];
-                if (point.text.substr(0, 3) == '标记点') return;
-                
-                var index = data[0].text.indexOf(d.points[0].text);
-                var str = point.text.replace(new RegExp('</br></br>|</br>', 'gm'), '\\n'),
-                    score = prompt(str + '\\n评分: ');
-                if (score > 10 || score < 0)
-                {
-                    alert('请输入评分在0-10分间')
-                }
-                else if (score <= 10 && score >= 0 && score != null && score != "")
-                {
-                    new QWebChannel(qt.webChannelTransport, function(channel)
+    
+    function set(myPlot) {
+        Plotly.newPlot("chartId", data, layout, { "showLink": false, "linkText": "Export to plot.ly" });
+        if (data[0].type == 'scattermapbox')
+        {
+            myPlot = document.getElementById('chartId');
+            myPlot.on('plotly_click', function(d){
+                    var point = d.points[0];
+                    if (point.text.substr(0, 3) == '标记点') return;
+    
+                    var index = data[0].text.indexOf(d.points[0].text),
+                        str = point.text.replace(new RegExp('</br></br>|</br>', 'gm'), '\\n'),
+                        score = prompt(str + '\\n评分: ');
+                    if (score > 10 || score < 0)
                     {
-                        //Get Qt interact object
-                        var interactObj = channel.objects.interactObj;
-                        interactObj.JSSendMessage(identify[index] + " "+ score);
-                    });
-                    alert('评分成功!');
+                        alert('请输入评分在0-10分间')
+                    }
+                    else if (score <= 10 && score >= 0 && score != null && score != "")
+                    {
+                        new QWebChannel(qt.webChannelTransport, function(channel)
+                        {
+                            //Get Qt interact object
+                            var interactObj = channel.objects.interactObj;
+                            interactObj.JSSendMessage(identify[index] + " "+ score);
+                        });
+                        scoreArr[index] = scoreArr[index] + score + ' ';
+                        var scores = scoreArr[index].substr(0, scoreArr[index].length-1).split(' '),
+                            sum = eval(scores.join('+')),
+                            numOfScores = scores.length,
+                            avgScore = sum / numOfScores;
+                        data[0].text[index] =
+                            data[0].text[index].replace(new RegExp('平均评分: .*?分</br>'), '平均评分: ' + avgScore + '分</br>');
+                        data[0].text[index] =
+                            data[0].text[index].replace(new RegExp('评分次数: .*?次'), '评分次数: '+ numOfScores + '次');
+                        alert('评分成功!');
+                        set(myPlot);
+                    }
                 }
-            }
-        );
+            );
+        }
     }
+    var myPlot = document.getElementById('chartId');
+    set(myPlot);
     </script>
     <script type="text/javascript">
     window.addEventListener("resize", function() { Plotly.Plots.resize(document.getElementById("chartId")); });

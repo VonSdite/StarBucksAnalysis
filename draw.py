@@ -105,9 +105,9 @@ def hasScore(score):
 # 店铺评分次数
 def scoreNum(score):
     if len(score) == 0:
-        return '0'
+        return '0次'
     else:
-        return str(len(score.strip().split(' ')))
+        return str(len(score.strip().split(' '))) + '次'
 
 def drawMap(csv_file, fileName="html/map.html", title=''):
     timeZoneDict = dict(csv_file['Timezone'].value_counts())
@@ -168,7 +168,7 @@ def drawMap(csv_file, fileName="html/map.html", title=''):
             pitch=0, zoom=1),
     )
 
-    plot(data, layout, list(csv_file['Id']), fileName)
+    plot(data, layout, list(csv_file['Id']), list(csv_file['Score']), fileName)
 
 
 def drawTopKMap(csv_file, lon, lat, topK, keyWord, data, fileName="html/topKMap.html",
@@ -235,8 +235,7 @@ def drawTopKMap(csv_file, lon, lat, topK, keyWord, data, fileName="html/topKMap.
         ),
     )
 
-    plot(data, layout, list(topKInfo['Id']), fileName)
-
+    plot(data, layout, list(topKInfo['Id']), list(topKInfo['Score']), fileName)
 
 def drawRangeMap(csv_file, lon, lat, range, fileName="html/rangeMap.html", title=''):
     rangeInfo = findRange(csv_file, lon, lat, range)
@@ -302,7 +301,7 @@ def drawRangeMap(csv_file, lon, lat, range, fileName="html/rangeMap.html", title
             pitch=0, zoom=1),
     )
 
-    plot(data, layout, list(rangeInfo['Id']), fileName)
+    plot(data, layout, list(rangeInfo['Id']), list(rangeInfo['Score']), fileName)
 
 
 def drawLineChart(data, fileName='html/line.html'):

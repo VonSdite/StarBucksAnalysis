@@ -88,15 +88,15 @@ class UI(QMainWindow):
 
     # 从JS获取数据
     def onReceiveMessageFromJS(self, strParameter):
-        # print('OnReceiveMessageFromJS(%s)' % strParameter)
-        data = strParameter.split(' ')
-        self.csv_file['Score'].iloc[int(data[0])] += data[1] + ' '
-        score = self.csv_file['Score'].iloc[int(data[0])].strip().split(' ')
-        # print('Score:', score)
-        avgScore = sum([float(s) for s in score]) / len(score)
-        # print('AvgScore:', avgScore)
-        self.csv_file['AvgScore'].iloc[int(data[0])] = str(avgScore)
+        data = strParameter.split(' ')  # Js传过来的数据格式为 '行号 分数'
 
+        self.csv_file['Score'].iloc[int(data[0])] += data[1] + ' '  # 添加分数到记录中
+
+        score = self.csv_file['Score'].iloc[int(data[0])].strip().split(' ')
+        avgScore = sum([float(s) for s in score]) / len(score)  # 求平均分
+        self.csv_file['AvgScore'].iloc[int(data[0])] = str(avgScore)
+        # print('Score:', score)
+        # print('AvgScore:', avgScore)
 
     # 加载html
     def showInWebEngineView(self, fileName, type=None):
