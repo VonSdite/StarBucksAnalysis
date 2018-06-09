@@ -14,7 +14,7 @@ from PyQt5.QtWebChannel import *
 from PyQt5.QtGui import QIcon, QIntValidator, QDoubleValidator
 from PyQt5.QtCore import Qt, QUrl, QThread
 from drawThread import DrawThread
-from TInteractObject import TInteractObj
+from pythonJsInteractObject import PythonJsInteractObject
 
 
 class UI(QMainWindow):
@@ -41,6 +41,7 @@ class UI(QMainWindow):
 
         self.initUI()
 
+    # 初始化UI
     def initUI(self):
         # 将任务栏图标改成 image/StarBucks.png
         if platform.system() == 'Windows':
@@ -72,20 +73,69 @@ class UI(QMainWindow):
 
         self.show()
 
+    # 设置webEngineView
     def setWebEngineView(self):
         self.webEngine = QWebEngineView(self)
 
+        # 设置JS和Python的交互通道
         self.pWebChannel = QWebChannel(self.webEngine.page())
-        self.pInteractObj = TInteractObj(self)
-        self.pWebChannel.registerObject('interactObj', self.pInteractObj)
+        self.pythonJsInteractObj = PythonJsInteractObject(self)
+        self.pWebChannel.registerObject('interactObj', self.pythonJsInteractObj)
         self.webEngine.page().setWebChannel(self.pWebChannel)
-        self.pInteractObj.sigReceivedMessFromJS.connect(self.onReceiveMessageFromJS)
+        self.pythonJsInteractObj.sigReceivedMessFromJS.connect(self.onReceiveMessageFromJS)
 
         self.mainLayout.addWidget(self.webEngine, 1, 8, 11, 15)
 
+    # 从JS获取数据
     def onReceiveMessageFromJS(self, strParameter):
         print('OnReceiveMessageFromJS(%s)' % strParameter)
 
+    # 加载html
+    def showInWebEngineView(self, fileName, type=None):
+        self.statusBar().showMessage(self.t.time)
+        t = float(self.t.time.split(' ')[1][:-1])  # 去掉中文字符和单位s
+        if type == self.FINDRANGE:
+            self.rangeTime.append(t)
+        elif type == self.FINDTOPKWITHKEYWORD:
+            self.topKTimeWithKeyWord.append(t)
+        elif type == self.FINDTOPKWITHOUTKEYWORD:
+            self.topKTimeWithoutKeyWord.append(t)
+        self.loadUrl(fileName)
+
+    # 加载html
+    def loadUrl(self, fileName):
+        self.webEngine.page().load(QUrl.fromLocalFile(fileName))
+
+    # 检查输入是否合法
+    def checkLongAndLat(self):
+        self.longitude = self.longitudeEdit.text()
+        self.latitude = self.latitudeEdit.text()
+        if self.longitude == "":
+            QMessageBox.warning(self, "警告", "请输入经度", QMessageBox.Ok)
+            return False
+
+        try:
+            self.longitude = float(self.longitude)
+            if self.longitude > 180 or self.longitude < -180:
+                QMessageBox.warning(self, "错误", "经度在-180~180之间", QMessageBox.Ok)
+                return False
+        except:
+            QMessageBox.warning(self, "错误", "请输入数字", QMessageBox.Ok)
+            return False
+
+        if self.latitude == "":
+            QMessageBox.warning(self, "警告", "请输入纬度", QMessageBox.Ok)
+            return False
+
+        try:
+            self.latitude = float(self.latitude)
+            if self.latitude > 90 or self.latitude < -90:
+                QMessageBox.warning(self, "错误", "纬度在-90~90之间", QMessageBox.Ok)
+                return False
+        except:
+            QMessageBox.warning(self, "错误", "请输入数字", QMessageBox.Ok)
+            return False
+        return True
 
     # top-k的输入框，按钮的控件
     def setFindInfoWidget(self):
@@ -162,36 +212,7 @@ class UI(QMainWindow):
         hWidget.setLayout(vBox)
         self.mainLayout.addWidget(hWidget, 2, 3, 6, 4)
 
-    def checkLongAndLat(self):
-        self.longitude = self.longitudeEdit.text()
-        self.latitude = self.latitudeEdit.text()
-        if self.longitude == "":
-            QMessageBox.warning(self, "警告", "请输入经度", QMessageBox.Ok)
-            return False
-
-        try:
-            self.longitude = float(self.longitude)
-            if self.longitude > 180 or self.longitude < -180:
-                QMessageBox.warning(self, "错误", "经度在-180~180之间", QMessageBox.Ok)
-                return False
-        except:
-            QMessageBox.warning(self, "错误", "请输入数字", QMessageBox.Ok)
-            return False
-
-        if self.latitude == "":
-            QMessageBox.warning(self, "警告", "请输入纬度", QMessageBox.Ok)
-            return False
-
-        try:
-            self.latitude = float(self.latitude)
-            if self.latitude > 90 or self.latitude < -90:
-                QMessageBox.warning(self, "错误", "纬度在-90~90之间", QMessageBox.Ok)
-                return False
-        except:
-            QMessageBox.warning(self, "错误", "请输入数字", QMessageBox.Ok)
-            return False
-        return True
-
+    # range范围查询
     def findRange(self):
         if not self.checkLongAndLat():
             return
@@ -221,6 +242,7 @@ class UI(QMainWindow):
             lambda: self.showInWebEngineView('/html/rangeMap.html', type))
         self.t.start()
 
+    # topK查询
     def findTopK(self):
         if not self.checkLongAndLat():
             return
@@ -258,6 +280,7 @@ class UI(QMainWindow):
         self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/topKMap.html', type))
         self.t.start()
 
+    # 扩展款显示
     def showExtension(self):
         self.extensionWidget.setVisible(not self.extensionWidget.isVisible())
         if self.extensionWidget.isVisible():
@@ -317,21 +340,6 @@ class UI(QMainWindow):
         self.mainLayout.addWidget(self.extensionButton, 1, 3, 1, 1)
         self.mainLayout.addWidget(self.extensionWidget, 1, 1, 7, 1)
 
-    # 加载html
-    def showInWebEngineView(self, fileName, type=None):
-        self.statusBar().showMessage(self.t.time)
-        t = float(self.t.time.split(' ')[1][:-1])  # 去掉中文字符和单位s
-        if type == self.FINDRANGE:
-            self.rangeTime.append(t)
-        elif type == self.FINDTOPKWITHKEYWORD:
-            self.topKTimeWithKeyWord.append(t)
-        elif type == self.FINDTOPKWITHOUTKEYWORD:
-            self.topKTimeWithoutKeyWord.append(t)
-        self.loadUrl(fileName)
-
-    def loadUrl(self, fileName):
-        self.webEngine.page().load(QUrl.fromLocalFile(fileName))
-
     # 画时区店铺数量渐变彩色点
     def drawMap(self):
         self.loadUrl('/config/loadingHtml/loading.html')
@@ -363,6 +371,7 @@ class UI(QMainWindow):
         self.t.endTrigger.connect(lambda: self.showInWebEngineView('/' + fileName))
         self.t.start()
 
+    # 显示时延
     def showTime(self):
         data = [
             (self.rangeTime, self.range, 'range查找'),
@@ -373,6 +382,7 @@ class UI(QMainWindow):
         self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/showTime.html'))
         self.t.start()
 
+    # 设置显示时延的菜单
     def setShowQueryTimeMenu(self):
         menuBar = self.menuBar()
         viewMenu = menuBar.addMenu('View')
@@ -422,6 +432,7 @@ class UI(QMainWindow):
         else:
             return False
 
+    # 打开文件
     def openFile(self, file, savePickle):
         if os.path.isfile(savePickle) and self.checkFile(file, savePickle):
             # 该文件曾被打开过， 有pickle缓存
