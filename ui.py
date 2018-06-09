@@ -88,7 +88,15 @@ class UI(QMainWindow):
 
     # 从JS获取数据
     def onReceiveMessageFromJS(self, strParameter):
-        print('OnReceiveMessageFromJS(%s)' % strParameter)
+        # print('OnReceiveMessageFromJS(%s)' % strParameter)
+        data = strParameter.split(' ')
+        self.csv_file['Score'].iloc[int(data[0])] += data[1] + ' '
+        score = self.csv_file['Score'].iloc[int(data[0])].strip().split(' ')
+        # print('Score:', score)
+        avgScore = sum([float(s) for s in score]) / len(score)
+        # print('AvgScore:', avgScore)
+        self.csv_file['AvgScore'].iloc[int(data[0])] = str(avgScore)
+
 
     # 加载html
     def showInWebEngineView(self, fileName, type=None):
@@ -448,8 +456,8 @@ class UI(QMainWindow):
             # 二是保存该文件的csv类型， 提高下次打开效率
             # 三是保存该文件的最后修改时间，用于下次打开时判断是否被修改过
             self.csv_file = pd.read_csv(file)
-            self.csv_file['AvgScore'] = 0
-            self.csv_file['Score'] = ""
+            self.csv_file['AvgScore'] = ''
+            self.csv_file['Score'] = ''
             self.csv_file['Id'] = list(range(len(self.csv_file)))
 
             with open(savePickle, 'wb') as f:

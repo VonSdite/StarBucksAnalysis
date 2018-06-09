@@ -95,6 +95,19 @@ def drawColorMaps(countryData, fileName="html/colorMap.html", title=''):
 
     plot(data, layout, fileName)
 
+# 店铺是否有评分
+def hasScore(score):
+    if score == '':
+        return '暂无评分'
+    else:
+        return score + '分'
+
+# 店铺评分次数
+def scoreNum(score):
+    if len(score) == 0:
+        return '0'
+    else:
+        return str(len(score.strip().split(' ')))
 
 def drawMap(csv_file, fileName="html/map.html", title=''):
     timeZoneDict = dict(csv_file['Timezone'].value_counts())
@@ -114,8 +127,10 @@ def drawMap(csv_file, fileName="html/map.html", title=''):
                        + "Street Address: " + csv_file["Street Address"] + "</br>" \
                        + "Postcode: " + csv_file["Postcode"] + "</br>" \
                        + "Phone Number: " + csv_file["Phone Number"] + "</br>" \
-                       + "Timezone:" + csv_file['Timezone'] + "</br>" \
-                       + "Number of stores:" + csv_file['TimeZoneCount'].map(int64ToStr)
+                       + "Timezone: " + csv_file['Timezone'] + "</br>" \
+                       + "Number of stores: " + csv_file['TimeZoneCount'].map(int64ToStr) + "</br>" \
+                       + '平均评分: ' + csv_file['AvgScore'].map(hasScore) + "</br>" \
+                       + '评分次数: ' + csv_file['Score'].map(scoreNum)
 
     data = [
         dict(
@@ -153,7 +168,7 @@ def drawMap(csv_file, fileName="html/map.html", title=''):
             pitch=0, zoom=1),
     )
 
-    plot(data, layout, fileName)
+    plot(data, layout, list(csv_file['Id']), fileName)
 
 
 def drawTopKMap(csv_file, lon, lat, topK, keyWord, data, fileName="html/topKMap.html",
@@ -168,7 +183,10 @@ def drawTopKMap(csv_file, lon, lat, topK, keyWord, data, fileName="html/topKMap.
                        + "Store Name: " + topKInfo["Store Name"] + "</br>" \
                        + "Street Address: " + topKInfo["Street Address"] + "</br>" \
                        + "Postcode: " + topKInfo["Postcode"] + "</br>" \
-                       + "Phone Number: " + topKInfo["Phone Number"] + "</br>"
+                       + "Phone Number: " + topKInfo["Phone Number"] + "</br>" \
+                       + "Timezone: " + topKInfo['Timezone'] + "</br>" \
+                       + '平均评分: ' + topKInfo['AvgScore'].map(hasScore) + "</br>" \
+                       + '评分次数: ' + topKInfo['Score'].map(scoreNum)
 
     data = [
         dict(
@@ -217,7 +235,7 @@ def drawTopKMap(csv_file, lon, lat, topK, keyWord, data, fileName="html/topKMap.
         ),
     )
 
-    plot(data, layout, fileName)
+    plot(data, layout, list(topKInfo['Id']), fileName)
 
 
 def drawRangeMap(csv_file, lon, lat, range, fileName="html/rangeMap.html", title=''):
@@ -233,7 +251,11 @@ def drawRangeMap(csv_file, lon, lat, range, fileName="html/rangeMap.html", title
                         + "Street Address: " + rangeInfo["Street Address"] + "</br>" \
                         + "Postcode: " + rangeInfo["Postcode"] + "</br>" \
                         + "Phone Number: " + rangeInfo["Phone Number"] + "</br>" \
-                        + "Distance: " + rangeInfo["Distance"] + "</br>"
+                        + "Timezone: " + rangeInfo['Timezone'] + "</br>" \
+                        + "Distance: " + rangeInfo["Distance"] + "</br>" \
+                        + '平均评分: ' + rangeInfo['AvgScore'].map(hasScore) + "</br>" \
+                        + '评分次数: ' + rangeInfo['Score'].map(scoreNum)
+
     data = [
         dict(
             type='scattermapbox',
@@ -280,7 +302,7 @@ def drawRangeMap(csv_file, lon, lat, range, fileName="html/rangeMap.html", title
             pitch=0, zoom=1),
     )
 
-    plot(data, layout, fileName)
+    plot(data, layout, list(rangeInfo['Id']), fileName)
 
 
 def drawLineChart(data, fileName='html/line.html'):

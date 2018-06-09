@@ -2,10 +2,9 @@
 # __Author__: Sdite
 # __Email__ : a122691411@gmail.com
 
-def plot(data, layout, fileName='html/plot.html'):
+def plot(data, layout, identify=[], fileName='html/plot.html'):
     # 画图模板字符串
     template = '''
-<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8" />
@@ -17,7 +16,8 @@ def plot(data, layout, fileName='html/plot.html'):
     <script type="text/javascript">
 ''' \
                + '''    var data = {data},
-'''.format(data=data) \
+    identify = {id},
+'''.format(data=data, id=identify) \
                + '''    layout = {layout};
 '''.format(layout=layout) \
                + '''    window.PLOTLYENV = window.PLOTLYENV || {};
@@ -29,6 +29,8 @@ def plot(data, layout, fileName='html/plot.html'):
         myPlot.on('plotly_click', function(d){
                 var point = d.points[0];
                 if (point.text.substr(0, 3) == '标记点') return;
+                
+                var index = data[0].text.indexOf(d.points[0].text);
                 var str = point.text.replace(new RegExp('</br></br>|</br>', 'gm'), '\\n'),
                     score = prompt(str + '\\n评分: ');
                 if (score > 10 || score < 0)
@@ -41,7 +43,7 @@ def plot(data, layout, fileName='html/plot.html'):
                     {
                         //Get Qt interact object
                         var interactObj = channel.objects.interactObj;
-                        interactObj.JSSendMessage(score);
+                        interactObj.JSSendMessage(identify[index] + " "+ score);
                     });
                     alert('评分成功!');
                 }

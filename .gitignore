@@ -100,4 +100,7 @@ ENV/
 # mypy
 .mypy_cache/
 .idea/*
-*.html
+html/*.html
+config/directory.pickle
+config/directory.picklechange
+config/directory.pickledata
