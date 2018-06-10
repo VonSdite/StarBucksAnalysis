@@ -26,7 +26,7 @@ def drawBar(data, fileName="html/bar.html", title=''):
     ]
     layout = dict(title=title)
 
-    plot(data, layout, fileName)
+    plot(data, layout, fileName=fileName)
 
 
 def drawPie(data, fileName="html/pie.html", title=''):
@@ -45,7 +45,7 @@ def drawPie(data, fileName="html/pie.html", title=''):
     ]
     layout = dict(title=title)
 
-    plot(data, layout, fileName)
+    plot(data, layout, fileName=fileName)
 
 
 def drawColorMaps(countryData, fileName="html/colorMap.html", title=''):
@@ -84,7 +84,7 @@ def drawColorMaps(countryData, fileName="html/colorMap.html", title=''):
     layout = dict(
         title=title,
         autosize=True,
-        hovermode=False,
+        hovermode=True,
         mapbox=dict(
             accesstoken=mapbox_access_token,
             bearing=0,
@@ -93,7 +93,7 @@ def drawColorMaps(countryData, fileName="html/colorMap.html", title=''):
         )
     )
 
-    plot(data, layout, fileName)
+    plot(data, layout, fileName=fileName)
 
 
 # 店铺是否有评分
@@ -349,4 +349,4 @@ def drawLineChart(data, fileName='html/line.html'):
         title='时延图',
     )
 
-    plot(trace, layout, fileName)
+    plot(trace, layout, fileName=fileName)

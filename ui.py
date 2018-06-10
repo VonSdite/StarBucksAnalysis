@@ -29,6 +29,9 @@ class UI(QMainWindow):
     def __init__(self):
         super(UI, self).__init__()
 
+        if not os.path.exists('./html'):
+            os.mkdir('./html')
+
         # 每种查询时延的列表
         self.topKTimeWithoutKeyWord = []
         self.topKTimeWithKeyWord = []
@@ -463,14 +466,21 @@ class UI(QMainWindow):
             with open(savePickle, 'wb') as f:
                 pickle.dump(self.csv_file, f)
 
-            if self.csv_file.get('AvgScore') == None:
+            try:
+                self.csv_file['AvgScore']
+            except:
                 self.csv_file['AvgScore'] = 0
 
-            if self.csv_file.get('Score') == None:
+            try:
+                self.csv_file['Score']
+            except:
                 self.csv_file['Score'] = ''
 
-            if self.csv_file.get('Id') == None:
+            try:
+                self.csv_file['Id']
+            except:
                 self.csv_file['Id'] = list(range(len(self.csv_file)))
+
 
             # self.data是每行整合成一行的列表
             csv_file_tmp = self.csv_file.fillna("").astype(str)
