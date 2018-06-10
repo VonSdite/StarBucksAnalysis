@@ -5,12 +5,9 @@
 import os
 import pickle
 import pandas as pd
-from random import randint
-import plotly.offline as py
-from plotly.graph_objs import *
-from PyQt5.QtCore import QUrl
 from findTopK import findTopK, findTopKWithKeyWord
 from findRange import findRange
+from plot import plot
 
 mapbox_access_token = 'pk.eyJ1Ijoic2RpdGUiLCJhIjoiY2pmajloaWJxMGw2NjJ4dW1za2c2cDNkZiJ9.KNk-JYP0chw-NFPffGs0eg'
 
@@ -20,9 +17,16 @@ def drawBar(data, fileName="html/bar.html", title=''):
     dataName = [key for key in dataDict]
     dataValues = [dataDict[key] for key in dataDict]
 
-    layout = Layout(title=title)
-    fig = dict(data=[Bar(x=dataName, y=dataValues)], layout=layout)
-    py.plot(fig, filename=fileName, auto_open=False)
+    data = [
+        dict(
+            type="bar",
+            x=dataName,
+            y=dataValues
+        )
+    ]
+    layout = dict(title=title)
+
+    plot(data, layout, fileName=fileName)
 
 
 def drawPie(data, fileName="html/pie.html", title=''):
@@ -30,11 +34,18 @@ def drawPie(data, fileName="html/pie.html", title=''):
     dataName = [key for key in dataDict]
     dataValues = [dataDict[key] for key in dataDict]
 
-    layout = Layout(title=title)
-    fig = dict(data=[Pie(labels=dataName, values=dataValues,
-                         hoverinfo='label+percent', textinfo="none")],
-               layout=layout)
-    py.plot(fig, filename=fileName, auto_open=False)
+    data = [
+        dict(
+            type="pie",
+            labels=dataName,
+            values=dataValues,
+            hoverinfo='label+percent',
+            textinfo='none'
+        )
+    ]
+    layout = dict(title=title)
+
+    plot(data, layout, fileName=fileName)
 
 
 def drawColorMaps(countryData, fileName="html/colorMap.html", title=''):
@@ -70,15 +81,45 @@ def drawColorMaps(countryData, fileName="html/colorMap.html", title=''):
         )
     ]
 
-    layout = Layout(title=title,
-                    autosize=True,
-                    hovermode='closest',
-                    mapbox=dict(accesstoken=mapbox_access_token,
-                                bearing=0,
-                                pitch=0,
-                                zoom=1))
-    fig = dict(data=data, layout=layout)
-    py.plot(fig, validate=False, filename=fileName, auto_open=False)
+    layout = dict(
+        title=title,
+        autosize=True,
+        hovermode=True,
+        mapbox=dict(
+            accesstoken=mapbox_access_token,
+            bearing=0,
+            pitch=0,
+            zoom=1
+        )
+    )
+
+    plot(data, layout, fileName=fileName)
+
+
+# 店铺是否有评分
+def hasScore(score):
+    if score == 0:
+        return '暂无评分'
+    else:
+        return str(score) + '分'
+
+
+# 店铺评分次数
+def scoreNum(score):
+    if len(score) == 0:
+        return '0次'
+    else:
+        return str(len(score.strip().split(' '))) + '次'
+
+
+# int转字符
+def intToStr(num):
+    return str(num)
+
+
+# 字符转int
+def strToInt(string):
+    return int(string)
 
 
 def drawMap(csv_file, fileName="html/map.html", title=''):
@@ -89,42 +130,45 @@ def drawMap(csv_file, fileName="html/map.html", title=''):
 
     csv_file['TimeZoneCount'] = csv_file['Timezone'].map(timeZoneToCount)
 
-    # 店铺基本信息
-    def int64ToStr(count):
-        return str(count)
-
     csv_file = csv_file.fillna('Not set')
     csv_file['info'] = "Store Number: " + csv_file["Store Number"] + "</br></br>" \
                        + "Store Name: " + csv_file["Store Name"] + "</br>" \
                        + "Street Address: " + csv_file["Street Address"] + "</br>" \
                        + "Postcode: " + csv_file["Postcode"] + "</br>" \
                        + "Phone Number: " + csv_file["Phone Number"] + "</br>" \
-                       + "Timezone:" + csv_file['Timezone'] + "</br>" \
-                       + "count:" + csv_file['TimeZoneCount'].map(int64ToStr)
+                       + "Timezone: " + csv_file['Timezone'] + "</br>" \
+                       + "Number of stores: " + csv_file['TimeZoneCount'].map(
+        intToStr) + "</br>" \
+                       + '平均评分: ' + csv_file['AvgScore'].map(hasScore) + "</br>" \
+                       + '评分次数: ' + csv_file['Score'].map(scoreNum)
 
-    data = []
-    data.append(Scattermapbox(
-        lat=csv_file['Latitude'],
-        lon=csv_file['Longitude'],
-        mode='markers',
-        marker=Marker(size=10, color=list(csv_file['TimeZoneCount']),
-                      colorscale=[[0, "rgb(172, 10, 5)"],
-                                  [0.35, "rgb(190, 60, 40)"],
-                                  [0.5, "rgb(245, 100, 70)"],
-                                  [0.97, "rgb(245, 131, 103)"],
-                                  [0.98, "rgb(245, 150, 131)"],
-                                  [0.99, "rgb(245, 171, 141)"],
-                                  [1, "rgb(255, 186, 163)"]
-                                  ],
-                      reversescale=True,
-                      showscale=True,
-                      ),
-        text=csv_file['info'],
-        textposition='top left',
-        hoverinfo='text',
-    ))
+    data = [
+        dict(
+            type='scattermapbox',
+            lat=list(csv_file['Latitude']),
+            lon=list(csv_file['Longitude']),
+            mode='markers',
+            marker=dict(
+                size=10,
+                color=list(csv_file['TimeZoneCount']),
+                colorscale=[[0, "rgb(172, 10, 5)"],
+                            [0.35, "rgb(190, 60, 40)"],
+                            [0.5, "rgb(245, 100, 70)"],
+                            [0.97, "rgb(245, 131, 103)"],
+                            [0.98, "rgb(245, 150, 131)"],
+                            [0.99, "rgb(245, 171, 141)"],
+                            [1, "rgb(255, 186, 163)"]
+                            ],
+                reversescale=True,
+                showscale=True,
+            ),
+            text=list(csv_file['info']),
+            textposition='top left',
+            hoverinfo='text',
+        ),
+    ]
 
-    layout = Layout(
+    layout = dict(
         title=title,
         autosize=True,
         hovermode='closest',
@@ -134,11 +178,17 @@ def drawMap(csv_file, fileName="html/map.html", title=''):
             pitch=0, zoom=1),
     )
 
-    fig = dict(data=data, layout=layout)
-    py.plot(fig, filename=fileName, auto_open=False)
+    plot(
+        data,
+        layout,
+        list(csv_file['Id'].map(strToInt)),
+        list(csv_file['Score'].map(intToStr)),
+        fileName
+    )
 
 
-def drawTopKMap(csv_file, lon, lat, topK, keyWord, data, fileName="html/topKMap.html", title=''):
+def drawTopKMap(csv_file, lon, lat, topK, keyWord, data, fileName="html/topKMap.html",
+                title=''):
     if keyWord == "":
         topKInfo = findTopK(csv_file, lon, lat, topK)
     else:
@@ -149,32 +199,43 @@ def drawTopKMap(csv_file, lon, lat, topK, keyWord, data, fileName="html/topKMap.
                        + "Store Name: " + topKInfo["Store Name"] + "</br>" \
                        + "Street Address: " + topKInfo["Street Address"] + "</br>" \
                        + "Postcode: " + topKInfo["Postcode"] + "</br>" \
-                       + "Phone Number: " + topKInfo["Phone Number"] + "</br>"
+                       + "Phone Number: " + topKInfo["Phone Number"] + "</br>" \
+                       + "Timezone: " + topKInfo['Timezone'] + "</br>" \
+                       + '平均评分: ' + topKInfo['AvgScore'].map(hasScore) + "</br>" \
+                       + '评分次数: ' + topKInfo['Score'].map(scoreNum)
 
-    data = []
-    data.append(Scattermapbox(
-        lat=topKInfo['Latitude'],
-        lon=topKInfo['Longitude'],
-        mode='markers',
-        marker=Marker(size=10, color='blue'),
-        text=topKInfo['info'],
-        textposition='top left',
-        hoverinfo='text',
-        name="topK点",
-    ))
+    data = [
+        dict(
+            type='scattermapbox',
+            lat=list(topKInfo['Latitude']),
+            lon=list(topKInfo['Longitude']),
+            mode='markers',
+            marker=dict(
+                size=10,
+                color='blue'
+            ),
+            text=list(topKInfo['info']),
+            textposition='top left',
+            hoverinfo='text',
+            name="topK点",
+        ),
+        dict(
+            type='scattermapbox',
+            lat=[lat],
+            lon=[lon],
+            mode='markers',
+            marker=dict(
+                size=10,
+                color='red'
+            ),
+            text=["标记点</br></br>经度:%f  纬度: %f" % (lon, lat)],
+            textposition='top left',
+            hoverinfo='text',
+            name="标记点",
+        )
+    ]
 
-    data.append(Scattermapbox(
-        lat=[lat],
-        lon=[lon],
-        mode='markers',
-        marker=Marker(size=10, color='red'),
-        text=["标记点</br></br>经度:%f  纬度: %f" % (lon, lat)],
-        textposition='top left',
-        hoverinfo='text',
-        name="标记点",
-    ))
-
-    layout = Layout(
+    layout = dict(
         title=title,
         autosize=True,
         hovermode='closest',
@@ -185,12 +246,17 @@ def drawTopKMap(csv_file, lon, lat, topK, keyWord, data, fileName="html/topKMap.
                 lon=lon
             ),
             bearing=0,
-            pitch=0, zoom=1),
+            pitch=0,
+            zoom=1
+        ),
     )
-
-    fig = dict(data=data, layout=layout)
-    py.plot(fig, filename=fileName, auto_open=False)
-
+    plot(
+        data,
+        layout,
+        list(topKInfo['Id'].map(strToInt)),
+        list(topKInfo['Score'].map(intToStr)),
+        fileName
+    )
 
 def drawRangeMap(csv_file, lon, lat, range, fileName="html/rangeMap.html", title=''):
     rangeInfo = findRange(csv_file, lon, lat, range)
@@ -205,31 +271,43 @@ def drawRangeMap(csv_file, lon, lat, range, fileName="html/rangeMap.html", title
                         + "Street Address: " + rangeInfo["Street Address"] + "</br>" \
                         + "Postcode: " + rangeInfo["Postcode"] + "</br>" \
                         + "Phone Number: " + rangeInfo["Phone Number"] + "</br>" \
-                        + "Distance: " + rangeInfo["Distance"] + "</br>"
-    data = []
-    data.append(Scattermapbox(
-        lat=rangeInfo['Latitude'],
-        lon=rangeInfo['Longitude'],
-        mode='markers',
-        marker=Marker(size=10, color='blue'),
-        text=rangeInfo['info'],
-        textposition='top left',
-        hoverinfo='text',
-        name="距离标记点 <= range的点",
-    ))
+                        + "Timezone: " + rangeInfo['Timezone'] + "</br>" \
+                        + "Distance: " + rangeInfo["Distance"] + "</br>" \
+                        + '平均评分: ' + rangeInfo['AvgScore'].map(hasScore) + "</br>" \
+                        + '评分次数: ' + rangeInfo['Score'].map(scoreNum)
 
-    data.append(Scattermapbox(
-        lat=[lat],
-        lon=[lon],
-        mode='markers',
-        marker=Marker(size=10, color='red'),
-        text=["标记点</br></br>经度:%f  纬度: %f 半径: %f" % (lon, lat, range)],
-        textposition='top left',
-        hoverinfo='text',
-        name="标记点",
-    ))
+    data = [
+        dict(
+            type='scattermapbox',
+            lat=list(rangeInfo['Latitude']),
+            lon=list(rangeInfo['Longitude']),
+            mode='markers',
+            marker=dict(
+                size=10,
+                color='blue'
+            ),
+            text=list(rangeInfo['info']),
+            textposition='top left',
+            hoverinfo='text',
+            name="距离标记点 <= range的点",
+        ),
+        dict(
+            type='scattermapbox',
+            lat=[lat],
+            lon=[lon],
+            mode='markers',
+            marker=dict(
+                size=10,
+                color='red'
+            ),
+            text=["标记点</br></br>经度:%f  纬度: %f 半径: %f" % (lon, lat, range)],
+            textposition='top left',
+            hoverinfo='text',
+            name="标记点",
+        )
+    ]
 
-    layout = Layout(
+    layout = dict(
         title=title,
         showlegend=True,
         autosize=True,
@@ -244,25 +322,31 @@ def drawRangeMap(csv_file, lon, lat, range, fileName="html/rangeMap.html", title
             pitch=0, zoom=1),
     )
 
-    fig = dict(data=data, layout=layout)
-    py.plot(fig, filename=fileName, auto_open=False)
+    plot(
+        data,
+        layout,
+        list(rangeInfo['Id'].map(strToInt)),
+        list(rangeInfo['Score'].map(intToStr)),
+        fileName
+    )
+
 
 def drawLineChart(data, fileName='html/line.html'):
     trace = []
     for info in data:
-        t = Scatter(
-            y = info[0],    # info[0]时延耗时
-            x = info[1],    # k或r值大小
-            name=info[2],   # 哪种查询
-            mode='lines+markers',
-            showlegend=True
+        trace.append(
+            dict(
+                type="scatter",
+                y=info[0],  # info[0]时延耗时
+                x=info[1],  # k或r值大小
+                name=info[2],  # 哪种查询
+                mode='lines+markers',
+                showlegend=True
+            )
         )
-        trace.append(t)
 
     layout = dict(
         title='时延图',
-        )
-    fig = dict(data=trace, layout=layout)
+    )
 
-    py.plot(fig, filename=fileName, auto_open=False)
-
+    plot(trace, layout, fileName=fileName)
