@@ -97,10 +97,10 @@ def drawColorMaps(countryData, fileName="html/colorMap.html", title=''):
 
 # 店铺是否有评分
 def hasScore(score):
-    if score == '':
+    if score == 0:
         return '暂无评分'
     else:
-        return score + '分'
+        return str(score) + '分'
 
 # 店铺评分次数
 def scoreNum(score):
@@ -108,6 +108,10 @@ def scoreNum(score):
         return '0次'
     else:
         return str(len(score.strip().split(' '))) + '次'
+
+# int转字符
+def intToStr(count):
+    return str(count)
 
 def drawMap(csv_file, fileName="html/map.html", title=''):
     timeZoneDict = dict(csv_file['Timezone'].value_counts())
@@ -117,10 +121,6 @@ def drawMap(csv_file, fileName="html/map.html", title=''):
 
     csv_file['TimeZoneCount'] = csv_file['Timezone'].map(timeZoneToCount)
 
-    # 店铺基本信息
-    def int64ToStr(count):
-        return str(count)
-
     csv_file = csv_file.fillna('Not set')
     csv_file['info'] = "Store Number: " + csv_file["Store Number"] + "</br></br>" \
                        + "Store Name: " + csv_file["Store Name"] + "</br>" \
@@ -128,7 +128,7 @@ def drawMap(csv_file, fileName="html/map.html", title=''):
                        + "Postcode: " + csv_file["Postcode"] + "</br>" \
                        + "Phone Number: " + csv_file["Phone Number"] + "</br>" \
                        + "Timezone: " + csv_file['Timezone'] + "</br>" \
-                       + "Number of stores: " + csv_file['TimeZoneCount'].map(int64ToStr) + "</br>" \
+                       + "Number of stores: " + csv_file['TimeZoneCount'].map(intToStr) + "</br>" \
                        + '平均评分: ' + csv_file['AvgScore'].map(hasScore) + "</br>" \
                        + '评分次数: ' + csv_file['Score'].map(scoreNum)
 
@@ -155,7 +155,7 @@ def drawMap(csv_file, fileName="html/map.html", title=''):
             text=list(csv_file['info']),
             textposition='top left',
             hoverinfo='text',
-        )
+        ),
     ]
 
     layout = dict(
@@ -188,6 +188,7 @@ def drawTopKMap(csv_file, lon, lat, topK, keyWord, data, fileName="html/topKMap.
                        + '平均评分: ' + topKInfo['AvgScore'].map(hasScore) + "</br>" \
                        + '评分次数: ' + topKInfo['Score'].map(scoreNum)
 
+
     data = [
         dict(
             type='scattermapbox',
@@ -196,7 +197,7 @@ def drawTopKMap(csv_file, lon, lat, topK, keyWord, data, fileName="html/topKMap.
             mode='markers',
             marker=dict(
                 size=10,
-                color='blue'
+                color=['blue']*len(topKInfo)
             ),
             text=list(topKInfo['info']),
             textposition='top left',
@@ -263,7 +264,7 @@ def drawRangeMap(csv_file, lon, lat, range, fileName="html/rangeMap.html", title
             mode='markers',
             marker=dict(
                 size=10,
-                color='blue'
+                color=['blue']*len(rangeInfo)
             ),
             text=list(rangeInfo['info']),
             textposition='top left',

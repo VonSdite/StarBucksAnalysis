@@ -14,15 +14,71 @@ def plot(data, layout, identify=[], score=[], fileName='html/plot.html'):
     <script src="../config/plotly.js"></script>
     <div id="chartId" style="height: 100%; width: 100%;" class="plotly-graph-div"></div>
     <script type="text/javascript">
+    function separateOutScoreMoreThanEightInit() {
+        for (var i = 0; i < scoreArr[0].length; ++i)
+        {
+            var scores = scoreArr[0][i].substr(0, scoreArr[0][i].length-1).split(' '),
+                sum = eval(scores.join('+')),
+                numOfScores = scores.length,
+                avgScore = sum / numOfScores;
+            if (avgScore > 8)
+            {
+                scoreArr[1].push(scoreArr[0][i]);
+                identify[1].push(identify[0][i]);
+                scoreArr[0].splice(i, 1);
+                identify[0].splice(i, 1);
+                data[1].lat.push(data[0].lat[i]);
+                data[1].lon.push(data[0].lon[i]);
+                data[1].text.push(data[0].text[i]);
+                data[0].lat.splice(i, 1);
+                data[0].lon.splice(i, 1);
+                data[0].text.splice(i, 1);
+            }
+        }
+    }
+    function separateOutScoreLessThanEight(index) {
+        scoreArr[0].push(scoreArr[1][index]);
+        identify[0].push(identify[1][index]);
+        scoreArr[1].splice(index, 1);
+        identify[1].splice(index, 1);
+        data[0].lat.push(data[1].lat[index]);
+        data[0].lon.push(data[1].lon[index]);
+        data[0].text.push(data[1].text[index]);
+        data[1].lat.splice(index, 1);
+        data[1].lon.splice(index, 1);
+        data[1].text.splice(index, 1);
+    }
+    function separateOutScoreMoreThanEight(index) {
+        scoreArr[1].push(scoreArr[0][index]);
+        identify[1].push(identify[0][index]);
+        scoreArr[0].splice(index, 1);
+        identify[0].splice(index, 1);
+        data[1].lat.push(data[0].lat[index]);
+        data[1].lon.push(data[0].lon[index]);
+        data[1].text.push(data[0].text[index]);
+        data[0].lat.splice(index, 1);
+        data[0].lon.splice(index, 1);
+        data[0].text.splice(index, 1);
+    }
 ''' \
                + '''    var data = {data},
-    identify = {id},
-    scoreArr = {score},
-    layout = {layout};
-'''.format(data=data, id=identify, score=score, layout=layout) \
+    layout = {layout},
+    identify = [{id}, []],
+    scoreArr = [{score}, []];
+'''.format(data=data, layout=layout, id=identify, score=score) \
                + '''    window.PLOTLYENV = window.PLOTLYENV || {};
     window.PLOTLYENV.BASE_URL = "https://plot.ly";
-    
+    if (data[0].type == 'scattermapbox')
+    {
+        data.splice(1, 0, {'type': 'scattermapbox', 'lat': [], 'lon': [], 'mode': 'markers', 'marker': {'size': 10, 'color': 'purple'}, 'text': [], 'textposition': 'top left', 'hoverinfo': 'text', 'name': '评分高于8分'});
+        separateOutScoreMoreThanEightInit();
+        if (data[0].marker.colorscale)
+        {
+            data[0].showlegend = false;
+            data[1].showlegend = false;
+        }
+    }
+    Plotly.newPlot("chartId", data, layout, { "showLink": false, "linkText": "Export to plot.ly" });
     function set(myPlot) {
         Plotly.newPlot("chartId", data, layout, { "showLink": false, "linkText": "Export to plot.ly" });
         if (data[0].type == 'scattermapbox')
@@ -32,9 +88,13 @@ def plot(data, layout, identify=[], score=[], fileName='html/plot.html'):
                     var point = d.points[0];
                     if (point.text.substr(0, 3) == '标记点') return;
     
-                    var index = data[0].text.indexOf(d.points[0].text),
+                    var index1 = data[0].text.indexOf(point.text),
+                        index2 = data[1].text.indexOf(point.text),
+                        index = (index1 == -1)?index2:index1,
+                        indexx = (index == index1)?0:1,
                         str = point.text.replace(new RegExp('</br></br>|</br>', 'gm'), '\\n'),
                         score = prompt(str + '\\n评分: ');
+                    
                     if (score > 10 || score < 0)
                     {
                         alert('请输入评分在0-10分间')
@@ -45,19 +105,28 @@ def plot(data, layout, identify=[], score=[], fileName='html/plot.html'):
                         {
                             //Get Qt interact object
                             var interactObj = channel.objects.interactObj;
-                            interactObj.JSSendMessage(identify[index] + " "+ score);
-                        });
-                        scoreArr[index] = scoreArr[index] + score + ' ';
-                        var scores = scoreArr[index].substr(0, scoreArr[index].length-1).split(' '),
+                            interactObj.JSSendMessage(identify[indexx][index] + " "+ score);
+                            
+                            scoreArr[indexx][index] = scoreArr[indexx][index] + score + ' ';
+                        var scores = scoreArr[indexx][index].substr(0, scoreArr[indexx][index].length-1).split(' '),
                             sum = eval(scores.join('+')),
                             numOfScores = scores.length,
                             avgScore = sum / numOfScores;
-                        data[0].text[index] =
-                            data[0].text[index].replace(new RegExp('平均评分: .*?分</br>'), '平均评分: ' + avgScore + '分</br>');
-                        data[0].text[index] =
-                            data[0].text[index].replace(new RegExp('评分次数: .*?次'), '评分次数: '+ numOfScores + '次');
+                        data[indexx].text[index] =
+                            data[indexx].text[index].replace(new RegExp('平均评分: .*?分</br>'), '平均评分: ' + avgScore + '分</br>');
+                        data[indexx].text[index] =
+                            data[indexx].text[index].replace(new RegExp('评分次数: .*?次'), '评分次数: '+ numOfScores + '次');
+                            if (avgScore > 8 && indexx != 1)
+                            {
+                                separateOutScoreMoreThanEight(index);
+                            }
+                            else if (avgScore <= 8 && indexx != 0)
+                            {
+                                separateOutScoreLessThanEight(index);
+                            }
+                            set(myPlot);
+                        });
                         alert('评分成功!');
-                        set(myPlot);
                     }
                 }
             );
