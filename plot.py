@@ -10,10 +10,54 @@ def plot(data, layout, identify=[], score=[], fileName='html/plot.html'):
     <meta charset="utf-8" />
 </head>
 <body>
+    <script type="text/javascript" src="../config/layer/jquery-3.3.1.js"></script>
     <script type="text/javascript" src="../config/qwebchannel.js"></script>  
     <script src="../config/plotly.js"></script>
+    <script src="../config/layer/layer.js"></script>
     <div id="chartId" style="height: 100%; width: 100%;" class="plotly-graph-div"></div>
     <script type="text/javascript">
+''' \
+               + '''    var data = {data},
+    layout = {layout},
+    identify = [{id}, []],
+    scoreArr = [{score}, []];
+'''.format(data=data, layout=layout, id=identify, score=score) \
+               + '''    function getValue() {
+        var obj = document.getElementById("score"),
+            i = obj.selectedIndex,
+            score = obj.options[i].value;
+        
+        new QWebChannel(qt.webChannelTransport, function(channel)
+        {
+            //Get Qt interact object
+            var interactObj = channel.objects.interactObj;
+            interactObj.JSSendMessage(identify[indexx][index] + " "+ score);
+            
+            scoreArr[indexx][index] = scoreArr[indexx][index] + score + ' ';
+        var scores = scoreArr[indexx][index].substr(0, scoreArr[indexx][index].length-1).split(' '),
+            sum = eval(scores.join('+')),
+            numOfScores = scores.length,
+            avgScore = sum / numOfScores;
+        data[indexx].text[index] =
+            data[indexx].text[index].replace(new RegExp('平均评分: .*?分</br>'), '平均评分: ' + avgScore + '分</br>');
+        data[indexx].text[index] =
+            data[indexx].text[index].replace(new RegExp('评分次数: .*?次'), '评分次数: '+ numOfScores + '次');
+            if (avgScore > 8 && indexx != 1)
+            {
+                separateOutScoreMoreThanEight(index);
+            }
+            else if (avgScore <= 8 && indexx != 0)
+            {
+                separateOutScoreLessThanEight(index);
+            }
+            set(myPlot);
+        });
+        alert('评分成功!');
+        layer.close(layer.index);
+    }
+    function closeLayer() {
+        layer.close(layer.index);
+    }
     function separateOutScoreMoreThanEightInit() {
         for (var i = 0; i < scoreArr[0].length; ++i)
         {
@@ -59,14 +103,8 @@ def plot(data, layout, identify=[], score=[], fileName='html/plot.html'):
         data[0].lat.splice(index, 1);
         data[0].lon.splice(index, 1);
         data[0].text.splice(index, 1);
-    }
-''' \
-               + '''    var data = {data},
-    layout = {layout},
-    identify = [{id}, []],
-    scoreArr = [{score}, []];
-'''.format(data=data, layout=layout, id=identify, score=score) \
-               + '''    window.PLOTLYENV = window.PLOTLYENV || {};
+    }    
+    window.PLOTLYENV = window.PLOTLYENV || {};
     window.PLOTLYENV.BASE_URL = "https://plot.ly";
     if (data[0].type == 'scattermapbox')
     {
@@ -88,51 +126,30 @@ def plot(data, layout, identify=[], score=[], fileName='html/plot.html'):
                     var point = d.points[0];
                     if (point.text.substr(0, 3) == '标记点') return;
     
-                    var index1 = data[0].text.indexOf(point.text),
-                        index2 = data[1].text.indexOf(point.text),
-                        index = (index1 == -1)?index2:index1,
-                        indexx = (index == index1)?0:1,
-                        str = point.text.replace(new RegExp('</br></br>|</br>', 'gm'), '\\n'),
-                        score = prompt(str + '\\n评分: ');
+                    index1 = data[0].text.indexOf(point.text);
+                    index2 = data[1].text.indexOf(point.text);
+                    index = (index1 == -1)?index2:index1;
+                    indexx = (index == index1)?0:1;
+                    var str = point.text.replace(new RegExp('</br></br>', 'gm'), '</br>');
+                        str += '</br></br>评分: '
                     
-                    if (score > 10 || score < 0)
-                    {
-                        alert('请输入评分在0-10分间')
-                    }
-                    else if (score <= 10 && score >= 0 && score != null && score != "")
-                    {
-                        new QWebChannel(qt.webChannelTransport, function(channel)
-                        {
-                            //Get Qt interact object
-                            var interactObj = channel.objects.interactObj;
-                            interactObj.JSSendMessage(identify[indexx][index] + " "+ score);
-                            
-                            scoreArr[indexx][index] = scoreArr[indexx][index] + score + ' ';
-                        var scores = scoreArr[indexx][index].substr(0, scoreArr[indexx][index].length-1).split(' '),
-                            sum = eval(scores.join('+')),
-                            numOfScores = scores.length,
-                            avgScore = sum / numOfScores;
-                        data[indexx].text[index] =
-                            data[indexx].text[index].replace(new RegExp('平均评分: .*?分</br>'), '平均评分: ' + avgScore + '分</br>');
-                        data[indexx].text[index] =
-                            data[indexx].text[index].replace(new RegExp('评分次数: .*?次'), '评分次数: '+ numOfScores + '次');
-                            if (avgScore > 8 && indexx != 1)
-                            {
-                                separateOutScoreMoreThanEight(index);
-                            }
-                            else if (avgScore <= 8 && indexx != 0)
-                            {
-                                separateOutScoreLessThanEight(index);
-                            }
-                            set(myPlot);
-                        });
-                        alert('评分成功!');
-                    }
+                    layer.open({
+                        type: 1,
+                        title: '店铺评分',
+                        maxmin: false,
+                        closeBtn: 1,
+                        area: ['500px', '350px'],
+                        content: '<div style="display: flex;flex-direction: column;margin: 0 5%;"><p>'+ str + '</p><select id="score" name="rating"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select><div style="display: flex;margin-top: 10px;"><button onclick="getValue()">确定</button><button style="margin-left: 10px"onclick="closeLayer()">取消</button></div></div>'
+                    });
                 }
             );
         }
     }
-    var myPlot = document.getElementById('chartId');
+    var myPlot = document.getElementById('chartId'),
+        index1 = 0,
+        index2 = 0,
+        index = 0,
+        indexx = 0;
     set(myPlot);
     </script>
     <script type="text/javascript">
@@ -147,5 +164,4 @@ def plot(data, layout, identify=[], score=[], fileName='html/plot.html'):
         f.write(template)
 
 if __name__ == '__main__':
-    # plot()
     pass

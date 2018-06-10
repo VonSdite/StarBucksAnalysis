@@ -88,7 +88,7 @@ class UI(QMainWindow):
 
     # 从JS获取数据
     def onReceiveMessageFromJS(self, strParameter):
-        # print('ReceiveFromJS', strParameter)
+        print('ReceiveFromJS', strParameter)
         data = strParameter.split(' ')  # Js传过来的数据格式为 '行号 分数'
 
         self.csv_file['Score'].iloc[int(data[0])] += data[1] + ' '  # 添加分数到记录中
