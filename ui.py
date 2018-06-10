@@ -443,6 +443,8 @@ class UI(QMainWindow):
 
     # 打开文件
     def openFile(self, file, savePickle):
+        self.file = file
+        self.savePickle = savePickle
         if os.path.isfile(savePickle) and self.checkFile(file, savePickle):
             # 该文件曾被打开过， 有pickle缓存
             # 该文件没有被修改过
@@ -457,12 +459,18 @@ class UI(QMainWindow):
             # 二是保存该文件的csv类型， 提高下次打开效率
             # 三是保存该文件的最后修改时间，用于下次打开时判断是否被修改过
             self.csv_file = pd.read_csv(file)
-            self.csv_file['AvgScore'] = 0
-            self.csv_file['Score'] = ''
-            self.csv_file['Id'] = list(range(len(self.csv_file)))
 
             with open(savePickle, 'wb') as f:
                 pickle.dump(self.csv_file, f)
+
+            if self.csv_file.get('AvgScore') == None:
+                self.csv_file['AvgScore'] = 0
+
+            if self.csv_file.get('Score') == None:
+                self.csv_file['Score'] = ''
+
+            if self.csv_file.get('Id') == None:
+                self.csv_file['Id'] = list(range(len(self.csv_file)))
 
             # self.data是每行整合成一行的列表
             csv_file_tmp = self.csv_file.fillna("").astype(str)
@@ -504,3 +512,39 @@ class UI(QMainWindow):
         cp = QDesktopWidget().availableGeometry().center()
         qr.moveCenter(cp)
         self.move(qr.topLeft())
+
+    def closeEvent(self, *args, **kwargs):
+        super().closeEvent(*args, **kwargs)
+
+        try:
+            self.csv_file = self.csv_file.drop(['TimeZoneCount'], axis=1)
+        except:
+            pass
+
+        try:
+            self.csv_file = self.csv_file.drop(['info'], axis=1)
+        except:
+            pass
+
+        try:
+            self.csv_file = self.csv_file.drop(['Distance'], axis=1)
+        except:
+            pass
+
+        self.csv_file.to_csv('directory.csv')       # 保存csv_file
+
+        with open(self.savePickle, 'wb') as f:
+            pickle.dump(self.csv_file, f)
+
+        # self.data是每行整合成一行的列表
+        # csv_file_tmp = self.csv_file.fillna("").astype(str)
+        # self.data = [" ".join(list(csv_file_tmp.iloc[x])) for x in
+        #              range(len(csv_file_tmp))]
+        #
+        # with open(self.savePickle + 'data', 'wb') as f:
+        #     pickle.dump(self.data, f)
+
+        changeTime = time.localtime(os.stat(self.file).st_mtime)
+        savePickleChange = self.savePickle + 'change'
+        with open(savePickleChange, 'wb') as f:
+            pickle.dump(changeTime, f)
