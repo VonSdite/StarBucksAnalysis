@@ -1,0 +1,1 @@
+/* Inspired by this super groovy dribbble shot https://dribbble.com/shots/946595-App-loader-GIF-animation?list=searches&tag=loader&offset=3 */
