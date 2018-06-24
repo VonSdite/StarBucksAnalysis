@@ -9,7 +9,6 @@ from plot import plot
 
 mapbox_access_token = 'pk.eyJ1Ijoic2RpdGUiLCJhIjoiY2pmajloaWJxMGw2NjJ4dW1za2c2cDNkZiJ9.KNk-JYP0chw-NFPffGs0eg'
 
-
 def drawBar(data, fileName="html/bar.html", title=''):
     dataDict = dict(data.value_counts())
     dataName = [key for key in dataDict]
@@ -25,7 +24,6 @@ def drawBar(data, fileName="html/bar.html", title=''):
     layout = dict(title=title)
 
     plot(data, layout, fileName=fileName)
-
 
 def drawPie(data, fileName="html/pie.html", title=''):
     dataDict = dict(data.value_counts())
@@ -44,7 +42,6 @@ def drawPie(data, fileName="html/pie.html", title=''):
     layout = dict(title=title)
 
     plot(data, layout, fileName=fileName)
-
 
 def drawColorMaps(countryData, fileName="html/colorMap.html", title=''):
     with open('config/countryTwoLettersToThree.pickle', 'rb') as f:
@@ -93,14 +90,12 @@ def drawColorMaps(countryData, fileName="html/colorMap.html", title=''):
 
     plot(data, layout, fileName=fileName)
 
-
 # 店铺是否有评分
 def hasScore(score):
     if score == 0:
         return '暂无评分'
     else:
         return str(score) + '分'
-
 
 # 店铺评分次数
 def scoreNum(score):
@@ -109,16 +104,15 @@ def scoreNum(score):
     else:
         return str(len(score.strip().split(' '))) + '次'
 
-
 # int转字符
 def intToStr(num):
+    if num == 'Not set':
+        return ''
     return str(num)
-
 
 # 字符转int
 def strToInt(string):
     return int(string)
-
 
 def drawMap(csv_file, fileName="html/map.html", title=''):
     timeZoneDict = dict(csv_file['Timezone'].value_counts())
@@ -129,6 +123,7 @@ def drawMap(csv_file, fileName="html/map.html", title=''):
     csv_file['TimeZoneCount'] = csv_file['Timezone'].map(timeZoneToCount)
 
     csv_file = csv_file.fillna('Not set')
+
     csv_file['info'] = "Store Number: " + csv_file["Store Number"] + "</br></br>" \
                        + "Store Name: " + csv_file["Store Name"] + "</br>" \
                        + "Street Address: " + csv_file["Street Address"] + "</br>" \
@@ -183,7 +178,6 @@ def drawMap(csv_file, fileName="html/map.html", title=''):
         list(csv_file['Score'].map(intToStr)),
         fileName
     )
-
 
 def drawTopKMap(csv_file, lon, lat, topK, keyWord, data, fileName="html/topKMap.html",
                 title=''):
@@ -327,7 +321,6 @@ def drawRangeMap(csv_file, lon, lat, range, fileName="html/rangeMap.html", title
         list(rangeInfo['Score'].map(intToStr)),
         fileName
     )
-
 
 def drawLineChart(data, fileName='html/line.html'):
     trace = []

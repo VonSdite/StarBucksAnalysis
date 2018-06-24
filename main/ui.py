@@ -13,6 +13,7 @@ from PyQt5.QtGui import QIcon, QIntValidator, QDoubleValidator
 from PyQt5.QtCore import QUrl
 from drawThread import DrawThread
 from pythonJsInteractObject import PythonJsInteractObject
+from draw import  *
 
 
 class UI(QMainWindow):
@@ -29,6 +30,8 @@ class UI(QMainWindow):
 
         if not os.path.exists('./html'):
             os.mkdir('./html')
+
+        self.t = None
 
         # 每种查询时延的列表
         self.topKTimeWithoutKeyWord = []
@@ -101,7 +104,8 @@ class UI(QMainWindow):
         # print('AvgScore:', avgScore)
 
     # 加载html
-    def showInWebEngineView(self, fileName, type=None):
+    def showInWebEngineView(self, button, fileName, type=None):
+        button.setEnabled(True)
         self.statusBar().showMessage(self.t.time)
         t = float(self.t.time.split(' ')[1][:-1])  # 去掉中文字符和单位s
         if type == self.FINDRANGE:
@@ -187,12 +191,12 @@ class UI(QMainWindow):
         self.findRangeButton = QPushButton()
         self.findRangeButton.setText("查找range")
         self.findRangeButton.setEnabled(False)
-        self.findRangeButton.clicked.connect(self.findRange)
+        self.findRangeButton.clicked.connect(lambda : self.findRange(self.findRangeButton))
 
         self.findTopKButton = QPushButton()
         self.findTopKButton.setText("查找top-k")
         self.findTopKButton.setEnabled(False)
-        self.findTopKButton.clicked.connect(self.findTopK)
+        self.findTopKButton.clicked.connect(lambda : self.findTopK(self.findTopKButton))
 
         self.longitudeEdit.setStatusTip("经度取值范围: -180.00-180.00")
         self.latitudeEdit.setStatusTip("纬度取值范围: -180.00-180.00")
@@ -223,15 +227,18 @@ class UI(QMainWindow):
         self.mainLayout.addWidget(hWidget, 2, 3, 6, 4)
 
     # range范围查询
-    def findRange(self):
+    def findRange(self, button):
         if not self.checkLongAndLat():
             return
+
 
         r = self.rangeEdit.text()
 
         if r == "":
             QMessageBox.warning(self, "警告", "请输入range值", QMessageBox.Ok)
             return
+
+        button.setEnabled(False)
 
         r = int(r)
 
@@ -249,13 +256,14 @@ class UI(QMainWindow):
         type = self.FINDRANGE
         self.range.append(r)
         self.t.endTrigger.connect(
-            lambda: self.showInWebEngineView('/html/rangeMap.html', type))
+            lambda: self.showInWebEngineView(button, '/html/rangeMap.html', type))
         self.t.start()
 
     # topK查询
-    def findTopK(self):
+    def findTopK(self, button):
         if not self.checkLongAndLat():
             return
+
 
         k = self.kEdit.text()
         keyword = self.keyWordEdit.text()
@@ -263,6 +271,8 @@ class UI(QMainWindow):
         if k == "":
             QMessageBox.warning(self, "警告", "请输入k值", QMessageBox.Ok)
             return
+
+        button.setEnabled(False)
 
         k = int(k)
 
@@ -287,10 +297,10 @@ class UI(QMainWindow):
             type = self.FINDTOPKWITHOUTKEYWORD
             self.topKWithoutKeyWord.append(k)
 
-        self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/topKMap.html', type))
+        self.t.endTrigger.connect(lambda: self.showInWebEngineView(button, '/html/topKMap.html', type))
         self.t.start()
 
-    # 扩展款显示
+    # 扩展显示
     def showExtension(self):
         self.extensionWidget.setVisible(not self.extensionWidget.isVisible())
         if self.extensionWidget.isVisible():
@@ -314,19 +324,28 @@ class UI(QMainWindow):
         self.countStoreByCountryButton_bar.setEnabled(False)
         self.countStoreByCountryButton_pie.setEnabled(False)
 
-        self.drawMapButton.clicked.connect(self.drawMap)
-        self.drawColorMapButton.clicked.connect(self.drawColorMap)
+        self.drawMapButton.clicked.connect(lambda : self.drawMap(self.drawMapButton))
+        self.drawColorMapButton.clicked.connect(lambda : self.drawColorMap(self.drawColorMapButton))
         self.countStoreByTimezoneButton_bar.clicked.connect(
-            lambda: self.drawBar(self.csv_file['Timezone'],
+            lambda: self.drawBar(self.countStoreByTimezoneButton_bar,
+                                 self.csv_file['Timezone'],
                                  'html/timezoneBar.html', '时区店铺数量柱状图'))
         self.countStoreByTimezoneButton_pie.clicked.connect(
-            lambda: self.drawPie(self.csv_file['Timezone'],
-                                 'html/timezonePie.html', '时区店铺数量饼图'))
+            lambda: self.drawPie(
+                self.countStoreByTimezoneButton_pie,
+                self.csv_file['Timezone'],
+                                 'html/timezonePie.html', '时区店铺数量饼图')
+        )
+
         self.countStoreByCountryButton_bar.clicked.connect(
-            lambda: self.drawBar(self.csv_file['Country'],
+            lambda: self.drawBar(
+                self.countStoreByCountryButton_bar,
+                self.csv_file['Country'],
                                  'html/countryBar.html', '国家店铺数量柱状图'))
         self.countStoreByCountryButton_pie.clicked.connect(
-            lambda: self.drawPie(self.csv_file['Country'],
+            lambda: self.drawPie(
+                self.countStoreByCountryButton_pie,
+                self.csv_file['Country'],
                                  'html/countryPie.html', '国家店铺数量饼图'))
 
         # 将旧的需求加入到扩展控件中
@@ -351,45 +370,53 @@ class UI(QMainWindow):
         self.mainLayout.addWidget(self.extensionWidget, 1, 1, 7, 1)
 
     # 画时区店铺数量渐变彩色点
-    def drawMap(self):
+    def drawMap(self, button):
+        button.setEnabled(False)
         self.loadUrl('/config/loadingHtml/loading.html')
-        self.t = DrawThread(drawMap, (self.csv_file, 'html/map.html', '不同时区店铺数量渐变图'))
-        self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/map.html'))
+
+        self.t = DrawThread(
+            target=drawMap,
+            args=(self.csv_file, 'html/map.html', '不同时区店铺数量渐变图')
+        )
+        self.t.endTrigger.connect(lambda: self.showInWebEngineView(button, '/html/map.html'))
         self.t.start()
 
     # 画国家分布彩色渐变图
-    def drawColorMap(self):
+    def drawColorMap(self, button):
+        button.setEnabled(False)
         self.loadUrl('/config/loadingHtml/loading.html')
         self.t = DrawThread(
             target=drawColorMaps,
             args=(self.csv_file['Country'],
                   'html/colorMap.html', '国家分布彩色图'))
-        self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/colorMap.html'))
+        self.t.endTrigger.connect(lambda: self.showInWebEngineView(button, '/html/colorMap.html'))
         self.t.start()
 
     # 画柱状图
-    def drawBar(self, data, fileName='html/bar.html', title=''):
+    def drawBar(self, button, data, fileName='html/bar.html', title=''):
+        button.setEnabled(False)
         self.loadUrl('/config/loadingHtml/loading.html')
         self.t = DrawThread(target=drawBar, args=(data, fileName, title))
-        self.t.endTrigger.connect(lambda: self.showInWebEngineView('/' + fileName))
+        self.t.endTrigger.connect(lambda: self.showInWebEngineView(button, '/' + fileName))
         self.t.start()
 
     # 画饼图
-    def drawPie(self, data, fileName='html/pie.hmtl', title=''):
+    def drawPie(self, button, data, fileName='html/pie.hmtl', title=''):
+        button.setEnabled(False)
         self.loadUrl('/config/loadingHtml/loading.html')
         self.t = DrawThread(target=drawPie, args=(data, fileName, title))
-        self.t.endTrigger.connect(lambda: self.showInWebEngineView('/' + fileName))
+        self.t.endTrigger.connect(lambda: self.showInWebEngineView(button, '/' + fileName))
         self.t.start()
 
     # 显示时延
-    def showTime(self):
+    def showTime(self, button):
         data = [
             (self.rangeTime, self.range, 'range查找'),
             (self.topKTimeWithoutKeyWord, self.topKWithoutKeyWord, 'topK无关键字'),
             (self.topKTimeWithKeyWord, self.topKWithKeyWord, 'topK有关键字')
         ]
         self.t = DrawThread(target=drawLineChart, args=(data, 'html/showTime.html'))
-        self.t.endTrigger.connect(lambda: self.showInWebEngineView('/html/showTime.html'))
+        self.t.endTrigger.connect(lambda: self.showInWebEngineView(button, '/html/showTime.html'))
         self.t.start()
 
     # 设置显示时延的菜单
@@ -400,7 +427,7 @@ class UI(QMainWindow):
         showQueryTimeMenu = QAction(QIcon('image/time.png'), 'show time', self)
         showQueryTimeMenu.setShortcut('Ctrl+1')
         showQueryTimeMenu.setStatusTip('显示时延')
-        showQueryTimeMenu.triggered.connect(self.showTime)
+        showQueryTimeMenu.triggered.connect(lambda : self.showTime(showQueryTimeMenu))
 
         viewMenu.addAction(showQueryTimeMenu)
 
