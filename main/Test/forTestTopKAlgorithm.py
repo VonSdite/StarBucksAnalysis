@@ -2,12 +2,9 @@
 # __Author__: Sdite, amyy4, JX-Soleil, hzgege
 # __Email__ : a122691411@gmail.com
 
-import time
 import heapq
-import pandas as pd
 import sys
 sys.path.append("../")
-from calcDistance import calcDistance
 
 import plotly.offline as py
 from plotly.graph_objs import *

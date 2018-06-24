@@ -32,6 +32,7 @@ class UI(QMainWindow):
             os.mkdir('./html')
 
         self.t = None
+        self.hasOpenFile = False
 
         # 每种查询时延的列表
         self.topKTimeWithoutKeyWord = []
@@ -230,7 +231,6 @@ class UI(QMainWindow):
     def findRange(self, button):
         if not self.checkLongAndLat():
             return
-
 
         r = self.rangeEdit.text()
 
@@ -541,6 +541,8 @@ class UI(QMainWindow):
         self.kEdit.setStatusTip("k值范围: 0-" + str(len(self.csv_file)))
         self.kEdit.setValidator(kIntValidator)
 
+        self.hasOpenFile = True
+
     # 窗口居中
     def center(self):
         qr = self.frameGeometry()
@@ -551,35 +553,37 @@ class UI(QMainWindow):
     def closeEvent(self, *args, **kwargs):
         super().closeEvent(*args, **kwargs)
 
-        try:
-            self.csv_file = self.csv_file.drop(['TimeZoneCount'], axis=1)
-        except:
-            pass
+        if self.hasOpenFile:
 
-        try:
-            self.csv_file = self.csv_file.drop(['info'], axis=1)
-        except:
-            pass
+            try:
+                self.csv_file = self.csv_file.drop(['TimeZoneCount'], axis=1)
+            except:
+                pass
 
-        try:
-            self.csv_file = self.csv_file.drop(['Distance'], axis=1)
-        except:
-            pass
+            try:
+                self.csv_file = self.csv_file.drop(['info'], axis=1)
+            except:
+                pass
 
-        self.csv_file.to_csv('directory.csv')       # 保存csv_file
+            try:
+                self.csv_file = self.csv_file.drop(['Distance'], axis=1)
+            except:
+                pass
 
-        with open(self.savePickle, 'wb') as f:
-            pickle.dump(self.csv_file, f)
+            self.csv_file.to_csv('directory.csv')       # 保存csv_file
 
-        # self.data是每行整合成一行的列表
-        # csv_file_tmp = self.csv_file.fillna("").astype(str)
-        # self.data = [" ".join(list(csv_file_tmp.iloc[x])) for x in
-        #              range(len(csv_file_tmp))]
-        #
-        # with open(self.savePickle + 'data', 'wb') as f:
-        #     pickle.dump(self.data, f)
+            with open(self.savePickle, 'wb') as f:
+                pickle.dump(self.csv_file, f)
 
-        changeTime = time.localtime(os.stat(self.file).st_mtime)
-        savePickleChange = self.savePickle + 'change'
-        with open(savePickleChange, 'wb') as f:
-            pickle.dump(changeTime, f)
+            # self.data是每行整合成一行的列表
+            # csv_file_tmp = self.csv_file.fillna("").astype(str)
+            # self.data = [" ".join(list(csv_file_tmp.iloc[x])) for x in
+            #              range(len(csv_file_tmp))]
+            #
+            # with open(self.savePickle + 'data', 'wb') as f:
+            #     pickle.dump(self.data, f)
+
+            changeTime = time.localtime(os.stat(self.file).st_mtime)
+            savePickleChange = self.savePickle + 'change'
+            with open(savePickleChange, 'wb') as f:
+                pickle.dump(changeTime, f)
