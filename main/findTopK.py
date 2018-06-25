@@ -18,7 +18,7 @@ def findTopKWithKeyWord(csv_file, longitude, latitude, topK, keyWord, data):
         lambda x: calcReverseDistance(longitude, latitude, x.Longitude, x.Latitude),
         axis=1)
 
-    csv_file['Relativity'] = calcRelativity(csv_file, keyWord, data)
+    csv_file['Relativity'] = calcRelativity(keyWord, data)
     return csv_file.sort_values(by=['Relativity', 'Distance'], ascending=False).head(topK)
 
 

@@ -6,8 +6,7 @@ from fuzzywuzzy import process
 import pandas as pd
 
 
-def calcRelativity(csv_file, keyWord, data):
-    csv_file_tmp = csv_file.fillna("").astype(str)
+def calcRelativity(keyWord, data):
     data = [x[1] for x in process.extractWithoutOrder(keyWord, data)]
     data = pd.DataFrame({
         'Relativity': data

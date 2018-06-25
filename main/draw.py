@@ -9,6 +9,30 @@ from plot import plot
 
 mapbox_access_token = 'pk.eyJ1Ijoic2RpdGUiLCJhIjoiY2pmajloaWJxMGw2NjJ4dW1za2c2cDNkZiJ9.KNk-JYP0chw-NFPffGs0eg'
 
+# 店铺是否有评分
+def hasScore(score):
+    if score == 0:
+        return '暂无评分'
+    else:
+        return str(score) + '分'
+
+# 店铺评分次数
+def scoreNum(score):
+    if len(score) == 0:
+        return '0次'
+    else:
+        return str(len(score.strip().split(' '))) + '次'
+
+# int转字符
+def intToStr(num):
+    if num == 'Not set':
+        return ''
+    return str(num)
+
+# 字符转int
+def strToInt(string):
+    return int(string)
+
 def drawBar(data, fileName="html/bar.html", title=''):
     dataDict = dict(data.value_counts())
     dataName = [key for key in dataDict]
@@ -42,6 +66,26 @@ def drawPie(data, fileName="html/pie.html", title=''):
     layout = dict(title=title)
 
     plot(data, layout, fileName=fileName)
+
+def drawLineChart(data, fileName='html/line.html'):
+    trace = []
+    for info in data:
+        trace.append(
+            dict(
+                type="scatter",
+                y=info[0],  # info[0]时延耗时
+                x=info[1],  # k或r值大小
+                name=info[2],  # 哪种查询
+                mode='lines+markers',
+                showlegend=True
+            )
+        )
+
+    layout = dict(
+        title='时延图',
+    )
+
+    plot(trace, layout, fileName=fileName)
 
 def drawColorMaps(countryData, fileName="html/colorMap.html", title=''):
     with open('config/countryTwoLettersToThree.pickle', 'rb') as f:
@@ -89,30 +133,6 @@ def drawColorMaps(countryData, fileName="html/colorMap.html", title=''):
     )
 
     plot(data, layout, fileName=fileName)
-
-# 店铺是否有评分
-def hasScore(score):
-    if score == 0:
-        return '暂无评分'
-    else:
-        return str(score) + '分'
-
-# 店铺评分次数
-def scoreNum(score):
-    if len(score) == 0:
-        return '0次'
-    else:
-        return str(len(score.strip().split(' '))) + '次'
-
-# int转字符
-def intToStr(num):
-    if num == 'Not set':
-        return ''
-    return str(num)
-
-# 字符转int
-def strToInt(string):
-    return int(string)
 
 def drawMap(csv_file, fileName="html/map.html", title=''):
     timeZoneDict = dict(csv_file['Timezone'].value_counts())
@@ -322,22 +342,3 @@ def drawRangeMap(csv_file, lon, lat, range, fileName="html/rangeMap.html", title
         fileName
     )
 
-def drawLineChart(data, fileName='html/line.html'):
-    trace = []
-    for info in data:
-        trace.append(
-            dict(
-                type="scatter",
-                y=info[0],  # info[0]时延耗时
-                x=info[1],  # k或r值大小
-                name=info[2],  # 哪种查询
-                mode='lines+markers',
-                showlegend=True
-            )
-        )
-
-    layout = dict(
-        title='时延图',
-    )
-
-    plot(trace, layout, fileName=fileName)
